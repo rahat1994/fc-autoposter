@@ -5,6 +5,9 @@ admin/node_modules/
 # Build output
 admin/dist/
 
+# Auto-generated environment config
+admin/env-config.php
+
 # Logs
 *.log
 npm-debug.log*

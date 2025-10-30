@@ -4,15 +4,23 @@
   "description": "FC Autoposter Admin Panel",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "npm run set-dev-mode && vite",
+    "dev:host": "npm run set-dev-mode && vite --host",
+    "build": "npm run set-prod-mode && vite build",
+    "preview": "vite preview",
+    "set-dev-mode": "node scripts/set-env.js development",
+    "set-prod-mode": "node scripts/set-env.js production",
+    "detect-domain": "node scripts/detect-domain.js",
+    "config-domain": "node scripts/detect-domain.js --update"
   },
   "dependencies": {
     "vue": "^3.5.13"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.1",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.18",
     "vite": "^5.4.21"
   }
 }
