@@ -49,9 +49,9 @@
                   </div>
                 </div>
                 <div class="flex items-center space-x-2">
-                  <span :class="getStatusClass(post.status)" class="px-2 py-1 text-xs font-medium rounded-full">
+                  <Badge :variant="getStatusVariant(post.status)">
                     {{ post.status }}
-                  </span>
+                  </Badge>
                 </div>
               </div>
             </div>
@@ -94,10 +94,9 @@
                   <Icon :name="getAiIcon(integration.name)" class="h-4 w-4" />
                   <span class="text-sm">{{ integration.name }}</span>
                 </div>
-                <div :class="integration.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'" 
-                     class="px-2 py-1 text-xs rounded-full">
+                <Badge :variant="integration.isActive ? 'default' : 'secondary'">
                   {{ integration.isActive ? 'Active' : 'Inactive' }}
-                </div>
+                </Badge>
               </div>
             </div>
           </CardContent>
@@ -109,7 +108,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Icon } from '@/components/ui'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Badge, Icon } from '@/components/ui'
 
 // Sample data
 const stats = ref([
@@ -163,14 +162,14 @@ const getAiIcon = (aiProvider) => {
   return icons[aiProvider] || 'cpu'
 }
 
-const getStatusClass = (status) => {
-  const classes = {
-    'Published': 'bg-green-100 text-green-800',
-    'Scheduled': 'bg-yellow-100 text-yellow-800',
-    'Draft': 'bg-gray-100 text-gray-800',
-    'Failed': 'bg-red-100 text-red-800'
+const getStatusVariant = (status) => {
+  const variants = {
+    'Published': 'default',
+    'Scheduled': 'secondary',
+    'Draft': 'outline',
+    'Failed': 'destructive'
   }
-  return classes[status] || 'bg-gray-100 text-gray-800'
+  return variants[status] || 'outline'
 }
 
 const createPost = () => {
