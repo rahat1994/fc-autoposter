@@ -28,6 +28,11 @@ const ALLOWED_ORIGINS = [
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src')
+    }
+  },
   build: {
     manifest: 'manifest.json',
     outDir: 'dist',

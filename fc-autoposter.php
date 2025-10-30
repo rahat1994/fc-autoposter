@@ -143,16 +143,16 @@ function fc_autoposter_enqueue_admin_scripts($hook) {
             true
         );
         
-        // Add admin notice for development mode
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            add_action('admin_notices', function() use ($dev_server_url) {
-                echo '<div class="notice notice-info"><p>';
-                echo '<strong>FC Autoposter:</strong> Running in development mode. ';
-                echo 'Dev server: <code>' . esc_html($dev_server_url) . '</code>';
-                echo '<br><small>If you see CORS errors, make sure your local WordPress domain is added to the Vite config.</small>';
-                echo '</p></div>';
-            });
-        }
+        // // Add admin notice for development mode
+        // if (defined('WP_DEBUG') && WP_DEBUG) {
+        //     add_action('admin_notices', function() use ($dev_server_url) {
+        //         echo '<div class="notice notice-info"><p>';
+        //         echo '<strong>FC Autoposter:</strong> Running in development mode. ';
+        //         echo 'Dev server: <code>' . esc_html($dev_server_url) . '</code>';
+        //         echo '<br><small>If you see CORS errors, make sure your local WordPress domain is added to the Vite config.</small>';
+        //         echo '</p></div>';
+        //     });
+        // }
         
     } else {
         // Production mode - load from dist
@@ -218,13 +218,13 @@ function fc_autoposter_enqueue_admin_scripts($hook) {
         }
         
         // Add admin notice for production mode
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            add_action('admin_notices', function() {
-                echo '<div class="notice notice-success"><p>';
-                echo '<strong>FC Autoposter:</strong> Running in production mode with built assets.';
-                echo '</p></div>';
-            });
-        }
+        // if (defined('WP_DEBUG') && WP_DEBUG) {
+        //     add_action('admin_notices', function() {
+        //         echo '<div class="notice notice-success"><p>';
+        //         echo '<strong>FC Autoposter:</strong> Running in production mode with built assets.';
+        //         echo '</p></div>';
+        //     });
+        // }
     }
 }
 add_action('admin_enqueue_scripts', 'fc_autoposter_enqueue_admin_scripts');
