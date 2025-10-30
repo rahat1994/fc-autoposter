@@ -9,6 +9,7 @@ export * from './label'
 export * from './select'
 export * from './table'
 export * from './tabs'
+export * from './textarea'
 
 // Custom components (keep existing ones)
 export { default as Icon } from './Icon.vue'

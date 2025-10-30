@@ -38,23 +38,12 @@
               <p class="text-muted-foreground">No community posts yet</p>
               <p class="text-sm text-muted-foreground/70">Set up AI integrations to start generating community content</p>
             </div>
-            <div v-else class="space-y-4">
-              <div v-for="post in recentPosts" :key="post.id" 
-                   class="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
-                <div class="flex items-center space-x-4">
-                  <Icon :name="getAiIcon(post.aiProvider)" class="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p class="font-medium">{{ post.title }}</p>
-                    <p class="text-sm text-muted-foreground">{{ post.aiProvider }} • {{ post.scheduledFor }}</p>
-                  </div>
-                </div>
-                <div class="flex items-center space-x-2">
-                  <Badge :variant="getStatusVariant(post.status)">
-                    {{ post.status }}
-                  </Badge>
-                </div>
-              </div>
-            </div>
+            <DataTable 
+              v-else
+              :data="recentPosts" 
+              :columns="postsColumns"
+              search-placeholder="Search posts..."
+            />
           </CardContent>
         </Card>
       </div>
@@ -66,7 +55,7 @@
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent class="space-y-3">
-            <Button class="w-full justify-start" @click="createPost">
+            <Button class="w-full justify-start" @click="openGenerateModal">
               <Icon name="plus" class="mr-2 h-4 w-4" />
               Generate New Post
             </Button>
@@ -104,11 +93,199 @@
       </div>
     </div>
   </div>
+
+  <!-- View Post Modal -->
+  <Dialog v-model:open="showViewModal">
+    <DialogContent class="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogHeader>
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex-1">
+            <DialogTitle v-if="selectedPost">{{ selectedPost.title }}</DialogTitle>
+            <p v-if="selectedPost" class="text-xs text-muted-foreground mt-1 flex items-center space-x-2">
+              <Icon name="sparkles" class="h-3 w-3" />
+              <span>AI-Generated Post • Posted {{ selectedPost.postedAt }}</span>
+            </p>
+          </div>
+          <Badge v-if="selectedPost" :variant="getStatusVariant(selectedPost.status)">
+            {{ selectedPost.status }}
+          </Badge>
+        </div>
+      </DialogHeader>
+      
+      <div v-if="selectedPost" class="space-y-6">
+        <!-- Post Body -->
+        <div class="space-y-2">
+          <h3 class="font-semibold text-sm">Post Content</h3>
+          <p class="text-sm text-foreground leading-relaxed">{{ selectedPost.body }}</p>
+        </div>
+
+        <!-- Post Metadata -->
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <p class="text-xs text-muted-foreground">AI Provider</p>
+            <p class="font-medium flex items-center space-x-2">
+              <Icon :name="getAiIcon(selectedPost.aiProvider)" class="h-4 w-4" />
+              <span>{{ selectedPost.aiProvider }}</span>
+            </p>
+          </div>
+          <div>
+            <p class="text-xs text-muted-foreground">Generation Time</p>
+            <p class="font-medium">{{ selectedPost.generationTime }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-muted-foreground">Generation Cost</p>
+            <p class="font-medium text-green-600">{{ selectedPost.generationCost }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-muted-foreground">Current Status</p>
+            <Badge :variant="getStatusVariant(selectedPost.status)">
+              {{ selectedPost.status }}
+            </Badge>
+          </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="space-y-4 border-t pt-4">
+          <h3 class="font-semibold text-sm">Comments ({{ selectedPost.comments.length }})</h3>
+          <div class="space-y-3 max-h-64 overflow-y-auto">
+            <div v-for="comment in selectedPost.comments" :key="comment.id" class="relative p-3 bg-muted/50 rounded-lg border-l-2 border-primary/30">
+              <!-- AI Generated Overlay -->
+              <div v-if="comment.isAiGenerated" class="absolute inset-0 bg-black/60 rounded-lg flex items-center justify-center pointer-events-none">
+                <div class="flex flex-col items-center space-y-2">
+                  <Icon name="sparkles" class="h-5 w-5 text-white" />
+                  <span class="text-sm font-medium text-white">Coming Soon!!</span>
+                </div>
+              </div>
+              
+              <div class="flex items-start space-x-3">
+                <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-semibold">
+                  {{ comment.avatar }}
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                      <p class="text-sm font-medium">{{ comment.author }}</p>
+                      <Badge v-if="comment.isAiGenerated" variant="outline" class="text-xs h-5 bg-blue-50 text-blue-700">
+                        <Icon name="sparkles" class="mr-1 h-2.5 w-2.5" />
+                        {{ comment.aiModel }}
+                      </Badge>
+                    </div>
+                    <p class="text-xs text-muted-foreground">{{ comment.timestamp }}</p>
+                  </div>
+                  <p class="text-sm text-foreground mt-1">{{ comment.content }}</p>
+                  <div class="flex items-center space-x-2 mt-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      class="h-7 text-xs"
+                      @click="approveComment(comment.id)"
+                    >
+                      <Icon name="check" class="mr-1 h-3 w-3" />
+                      Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      class="h-7 text-xs text-red-600 hover:text-red-700"
+                      @click="disapproveComment(comment.id)"
+                    >
+                      <Icon name="x" class="mr-1 h-3 w-3" />
+                      Disapprove
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer with Actions -->
+      <DialogFooter class="flex gap-2 pt-4 border-t">
+        <Button 
+          variant="outline"
+          @click="closeModal"
+        >
+          Close
+        </Button>
+        <Button 
+          variant="destructive"
+          @click="deleteModalPost"
+        >
+          <Icon name="trash" class="mr-2 h-4 w-4" />
+          Delete
+        </Button>
+        <Button 
+          @click="approvePost"
+        >
+          <Icon name="check" class="mr-2 h-4 w-4" />
+          Approve
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+
+  <!-- Generate New Post Modal -->
+  <Dialog v-model:open="showGenerateModal">
+    <DialogContent class="max-w-md">
+      <DialogHeader>
+        <DialogTitle>Generate New Post</DialogTitle>
+        <DialogDescription>
+          Enter a prompt to generate a new AI-powered post for your community.
+        </DialogDescription>
+      </DialogHeader>
+      
+      <div class="space-y-4 py-4">
+        <div class="space-y-2">
+          <Label for="post-prompt">Post Prompt</Label>
+          <Textarea
+            id="post-prompt"
+            v-model="newPostPrompt"
+            placeholder="Describe the topic, style, and any specific requirements for your post..."
+            class="min-h-[120px] resize-none"
+          />
+        </div>
+      </div>
+
+      <DialogFooter>
+        <Button variant="outline" @click="closeGenerateModal">
+          Cancel
+        </Button>
+        <Button @click="generateNewPost" :disabled="!newPostPrompt.trim()">
+          <Icon name="sparkles" class="mr-2 h-4 w-4" />
+          Generate Post
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Badge, Icon } from '@/components/ui'
+import { ref, h } from 'vue'
+import { 
+  Card, 
+  CardHeader, 
+  CardTitle, 
+  CardDescription, 
+  CardContent, 
+  Button, 
+  Badge, 
+  Icon,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  Textarea,
+  Label
+} from '@/components/ui'
+import DataTable from '@/components/DataTable.vue'
 
 // Sample data
 const stats = ref([
@@ -122,23 +299,207 @@ const recentPosts = ref([
   {
     id: 1,
     title: 'Community Discussion: Best WordPress Practices',
+    body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
     aiProvider: 'OpenAI GPT-4',
-    status: 'Published',
-    scheduledFor: '2 hours ago'
+    generationTime: '2.3s',
+    generationCost: '$0.045',
+    status: 'Approved',
+    postedAt: '30 mins ago',
+    createdAt: '2 hours ago',
+    isAiGenerated: true,
+    comments: [
+      {
+        id: 1,
+        author: 'John Doe',
+        avatar: 'JD',
+        content: 'Great post! This really helped me understand the best practices. The explanation was clear and concise.',
+        timestamp: '28 mins ago',
+        isAiGenerated: true,
+        aiModel: 'Claude AI'
+      },
+      {
+        id: 2,
+        author: 'Jane Smith',
+        avatar: 'JS',
+        content: 'Thanks for sharing this valuable information. Looking forward to more posts like this! The examples were particularly helpful.',
+        timestamp: '20 mins ago',
+        isAiGenerated: true,
+        aiModel: 'OpenAI GPT-4'
+      },
+      {
+        id: 3,
+        author: 'Mike Johnson',
+        avatar: 'MJ',
+        content: 'This is exactly what I was looking for. Well written and comprehensive. I\'ll definitely implement these practices.',
+        timestamp: '10 mins ago',
+        isAiGenerated: true,
+        aiModel: 'Gemini'
+      }
+    ]
   },
   {
     id: 2,
     title: 'Weekly Community Highlights and Updates',
+    body: 'This week has been fantastic! We\'ve seen numerous improvements and updates to our community platform. Our team has been working hard to bring you the best experience possible.',
     aiProvider: 'Claude AI',
-    status: 'Scheduled',
-    scheduledFor: 'Tomorrow at 9:00 AM'
+    generationTime: '1.8s',
+    generationCost: '$0.032',
+    status: 'Approval Needed',
+    postedAt: '25 mins ago',
+    createdAt: '4 hours ago',
+    isAiGenerated: true,
+    comments: [
+      {
+        id: 1,
+        author: 'Sarah Williams',
+        avatar: 'SW',
+        content: 'Amazing updates! Can\'t wait to try out the new features. This is exactly what the community needed.',
+        timestamp: '22 mins ago',
+        isAiGenerated: true,
+        aiModel: 'OpenAI GPT-4'
+      },
+      {
+        id: 2,
+        author: 'Robert Brown',
+        avatar: 'RB',
+        content: 'Keep up the excellent work! The improvements are noticeable and appreciated by everyone.',
+        timestamp: '18 mins ago',
+        isAiGenerated: true,
+        aiModel: 'Claude AI'
+      },
+      {
+        id: 3,
+        author: 'Emma Davis',
+        avatar: 'ED',
+        content: 'The new interface is so much better. Congratulations to the team! Performance improvements are great too.',
+        timestamp: '12 mins ago',
+        isAiGenerated: true,
+        aiModel: 'Gemini'
+      }
+    ]
   },
   {
     id: 3,
     title: 'New Feature Tutorial: Community Groups',
+    body: 'We\'re excited to introduce a new feature that will enhance your community experience. Community Groups allow you to organize members into smaller, focused communities for better engagement.',
     aiProvider: 'Gemini',
-    status: 'Draft',
-    scheduledFor: 'Not scheduled'
+    generationTime: '3.1s',
+    generationCost: '$0.028',
+    status: 'Approved',
+    postedAt: '1 day ago',
+    createdAt: '1 day ago',
+    isAiGenerated: true,
+    comments: [
+      {
+        id: 1,
+        author: 'Tom Wilson',
+        avatar: 'TW',
+        content: 'Finally! We\'ve been waiting for this feature. This will make community management so much easier.',
+        timestamp: '23 hours ago',
+        isAiGenerated: true,
+        aiModel: 'Claude AI'
+      },
+      {
+        id: 2,
+        author: 'Lisa Anderson',
+        avatar: 'LA',
+        content: 'This will definitely help organize our members better. The grouping functionality is intuitive.',
+        timestamp: '22 hours ago',
+        isAiGenerated: true,
+        aiModel: 'OpenAI GPT-4'
+      },
+      {
+        id: 3,
+        author: 'Chris Martin',
+        avatar: 'CM',
+        content: 'Excellent tutorial! Very clear and easy to follow. The step-by-step guide was helpful.',
+        timestamp: '20 hours ago',
+        isAiGenerated: true,
+        aiModel: 'Gemini'
+      }
+    ]
+  },
+  {
+    id: 4,
+    title: 'How to Optimize Your Community Engagement',
+    body: 'Engagement is key to building a thriving community. In this guide, we\'ll explore proven strategies and best practices to help you maximize member participation and satisfaction.',
+    aiProvider: 'OpenAI GPT-4',
+    generationTime: '2.7s',
+    generationCost: '$0.051',
+    status: 'Approval Needed',
+    postedAt: '2 days ago',
+    createdAt: '2 days ago',
+    isAiGenerated: true,
+    comments: [
+      {
+        id: 1,
+        author: 'Alex Garcia',
+        avatar: 'AG',
+        content: 'Very insightful article! Thanks for the tips. I\'m already seeing improvements in engagement.',
+        timestamp: '1 day ago',
+        isAiGenerated: true,
+        aiModel: 'Claude AI'
+      },
+      {
+        id: 2,
+        author: 'Maria Rodriguez',
+        avatar: 'MR',
+        content: 'I\'ve already implemented some of these strategies and seeing great results. Highly recommended!',
+        timestamp: '1 day ago',
+        isAiGenerated: true,
+        aiModel: 'OpenAI GPT-4'
+      },
+      {
+        id: 3,
+        author: 'David Lee',
+        avatar: 'DL',
+        content: 'Do you have any specific recommendations for smaller communities? Would love to learn more.',
+        timestamp: '20 hours ago',
+        isAiGenerated: true,
+        aiModel: 'Gemini'
+      }
+    ]
+  },
+  {
+    id: 5,
+    title: 'Setting Up Community Guidelines',
+    body: 'Setting clear guidelines is essential for maintaining a healthy community. These guidelines help ensure that all members understand expectations and can participate respectfully.',
+    aiProvider: 'Claude AI',
+    generationTime: '2.1s',
+    generationCost: '$0.039',
+    status: 'Approved',
+    postedAt: '3 days ago',
+    createdAt: '3 days ago',
+    isAiGenerated: true,
+    comments: [
+      {
+        id: 1,
+        author: 'Patricia Taylor',
+        avatar: 'PT',
+        content: 'Great resource for new community managers! This should be pinned for everyone to see.',
+        timestamp: '2 days ago',
+        isAiGenerated: true,
+        aiModel: 'OpenAI GPT-4'
+      },
+      {
+        id: 2,
+        author: 'James White',
+        avatar: 'JW',
+        content: 'These guidelines are exactly what our community needed. Very well structured.',
+        timestamp: '2 days ago',
+        isAiGenerated: true,
+        aiModel: 'Claude AI'
+      },
+      {
+        id: 3,
+        author: 'Nancy Harris',
+        avatar: 'NH',
+        content: 'Very comprehensive and well-structured guide. Thank you for taking the time to create this.',
+        timestamp: '1 day ago',
+        isAiGenerated: true,
+        aiModel: 'Gemini'
+      }
+    ]
   }
 ])
 
@@ -149,6 +510,98 @@ const aiIntegrations = ref([
   { name: 'Perplexity AI', isActive: false },
   { name: 'Mistral AI', isActive: false },
 ])
+
+// Modal state for viewing posts
+// Modal states
+const showViewModal = ref(false)
+const showGenerateModal = ref(false)
+const selectedPost = ref(null)
+const newPostPrompt = ref('')
+
+// Table columns for recent posts
+const postsColumns = [
+  {
+    accessorKey: 'title',
+    header: 'Post Details',
+    cell: ({ row }) => {
+      const post = row.original
+      return h('div', { class: 'space-y-1' }, [
+        h('div', { class: 'font-medium text-sm' }, post.title),
+        h('div', { class: 'flex items-center space-x-2 text-xs text-muted-foreground' }, [
+          h(Icon, { name: getAiIcon(post.aiProvider), class: 'h-3 w-3' }),
+          h('span', post.aiProvider),
+          h('span', '•'),
+          h('span', post.generationTime),
+          h('span', '•'),
+          h('span', { class: 'flex items-center space-x-1' }, [
+            h(Icon, { name: 'clock', class: 'h-3 w-3' }),
+            h('span', 'Posted ' + post.postedAt)
+          ])
+        ])
+      ])
+    }
+  },
+  {
+    accessorKey: 'generationCost',
+    header: 'Cost',
+    cell: ({ getValue }) => h('div', { class: 'font-medium text-green-600' }, getValue())
+  },
+  {
+    accessorKey: 'status',
+    header: 'Status',
+    cell: ({ getValue }) => {
+      const value = getValue()
+      const statusVariants = {
+        'Approved': 'default',
+        'Approval Needed': 'secondary'
+      }
+      return h(Badge, {
+        variant: statusVariants[value] || 'outline'
+      }, value)
+    }
+  },
+  {
+    id: 'actions',
+    header: '',
+    cell: ({ row }) => {
+      return h(DropdownMenu, {}, {
+        default: () => [
+          h(DropdownMenuTrigger, { asChild: true }, {
+            default: () => h(Button, { 
+              variant: 'ghost', 
+              size: 'sm',
+              class: 'h-8 w-8 p-0'
+            }, [
+              h(Icon, { name: 'moreHorizontal', class: 'h-4 w-4' })
+            ])
+          }),
+          h(DropdownMenuContent, { align: 'end' }, [
+            h(DropdownMenuItem, { 
+              onClick: () => viewPost(row.original.id) 
+            }, [
+              h(Icon, { name: 'eye', class: 'mr-2 h-4 w-4' }),
+              'View'
+            ]),
+            h(DropdownMenuItem, { 
+              onClick: () => editPost(row.original.id) 
+            }, [
+              h(Icon, { name: 'edit', class: 'mr-2 h-4 w-4' }),
+              'Edit'
+            ]),
+            h(DropdownMenuSeparator),
+            h(DropdownMenuItem, { 
+              onClick: () => deletePost(row.original.id),
+              class: 'text-red-600'
+            }, [
+              h(Icon, { name: 'trash', class: 'mr-2 h-4 w-4' }),
+              'Delete'
+            ])
+          ])
+        ]
+      })
+    }
+  }
+]
 
 // Methods
 const getAiIcon = (aiProvider) => {
@@ -164,10 +617,8 @@ const getAiIcon = (aiProvider) => {
 
 const getStatusVariant = (status) => {
   const variants = {
-    'Published': 'default',
-    'Scheduled': 'secondary',
-    'Draft': 'outline',
-    'Failed': 'destructive'
+    'Approved': 'default',
+    'Approval Needed': 'secondary'
   }
   return variants[status] || 'outline'
 }
@@ -182,5 +633,90 @@ const viewSchedule = () => {
 
 const manageAiIntegrations = () => {
   console.log('Manage AI integrations clicked')
+}
+
+// Table action methods
+const viewPost = (id) => {
+  const post = recentPosts.value.find(p => p.id === id)
+  if (post) {
+    selectedPost.value = post
+    showViewModal.value = true
+  }
+}
+
+const editPost = (id) => {
+  console.log('Edit post:', id)
+}
+
+const deletePost = (id) => {
+  console.log('Delete post:', id)
+}
+
+// Modal action methods
+const approvePost = () => {
+  if (selectedPost.value) {
+    selectedPost.value.status = 'Approved'
+    console.log('Post approved:', selectedPost.value.id)
+    showViewModal.value = false
+  }
+}
+
+const deleteModalPost = () => {
+  if (selectedPost.value) {
+    const index = recentPosts.value.findIndex(p => p.id === selectedPost.value.id)
+    if (index > -1) {
+      recentPosts.value.splice(index, 1)
+    }
+    console.log('Post deleted:', selectedPost.value.id)
+    showViewModal.value = false
+  }
+}
+
+const closeModal = () => {
+  showViewModal.value = false
+  selectedPost.value = null
+}
+
+// Generate new post methods
+const openGenerateModal = () => {
+  showGenerateModal.value = true
+}
+
+const generateNewPost = () => {
+  if (newPostPrompt.value.trim()) {
+    // Here you would typically call an API to generate the post
+    console.log('Generating new post with prompt:', newPostPrompt.value)
+    // For now, we'll just close the modal and reset the prompt
+    showGenerateModal.value = false
+    newPostPrompt.value = ''
+  }
+}
+
+const closeGenerateModal = () => {
+  showGenerateModal.value = false
+  newPostPrompt.value = ''
+}
+
+// Comment action methods
+const approveComment = (commentId) => {
+  if (selectedPost.value) {
+    const comment = selectedPost.value.comments.find(c => c.id === commentId)
+    if (comment) {
+      comment.approved = true
+      comment.disapproved = false
+      console.log('Comment approved:', commentId)
+    }
+  }
+}
+
+const disapproveComment = (commentId) => {
+  if (selectedPost.value) {
+    const comment = selectedPost.value.comments.find(c => c.id === commentId)
+    if (comment) {
+      comment.disapproved = true
+      comment.approved = false
+      console.log('Comment disapproved:', commentId)
+    }
+  }
 }
 </script>
