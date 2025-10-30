@@ -10,6 +10,8 @@ export * from './select'
 export * from './table'
 export * from './tabs'
 export * from './textarea'
+export * from './calendar'
+export * from './popover'
 
 // Custom components (keep existing ones)
 export { default as Icon } from './Icon.vue'

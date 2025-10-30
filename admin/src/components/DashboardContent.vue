@@ -245,6 +245,26 @@
             class="min-h-[120px] resize-none"
           />
         </div>
+
+        <div class="space-y-2">
+          <Label>Publish Date</Label>
+          <Popover>
+            <PopoverTrigger as-child>
+              <Button
+                variant="outline"
+                class="w-full justify-start text-left font-normal"
+              >
+                <Icon name="calendar" class="mr-2 h-4 w-4" />
+                {{ newPostDate ? new Date(newPostDate).toLocaleDateString() : 'Pick a date' }}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent class="w-auto p-0" align="start">
+              <Calendar
+                v-model="newPostDate"
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       <DialogFooter>
@@ -283,7 +303,11 @@ import {
   DialogTitle,
   DialogFooter,
   Textarea,
-  Label
+  Label,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Calendar
 } from '@/components/ui'
 import DataTable from '@/components/DataTable.vue'
 
@@ -517,6 +541,7 @@ const showViewModal = ref(false)
 const showGenerateModal = ref(false)
 const selectedPost = ref(null)
 const newPostPrompt = ref('')
+const newPostDate = ref('')
 
 // Table columns for recent posts
 const postsColumns = [
@@ -686,15 +711,18 @@ const generateNewPost = () => {
   if (newPostPrompt.value.trim()) {
     // Here you would typically call an API to generate the post
     console.log('Generating new post with prompt:', newPostPrompt.value)
+    console.log('Publish date:', newPostDate.value)
     // For now, we'll just close the modal and reset the prompt
     showGenerateModal.value = false
     newPostPrompt.value = ''
+    newPostDate.value = ''
   }
 }
 
 const closeGenerateModal = () => {
   showGenerateModal.value = false
   newPostPrompt.value = ''
+  newPostDate.value = ''
 }
 
 // Comment action methods
