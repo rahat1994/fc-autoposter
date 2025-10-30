@@ -61,23 +61,50 @@ function fc_autoposter_enqueue_admin_scripts($hook) {
     
     if (!file_exists($manifest_path)) {
         // Development mode - load from Vite dev server
-        wp_enqueue_script(
-            'fc-autoposter-vite-client',
-            'http://localhost:5173/@vite/client',
-            array(),
-            null,
-            true
-        );
-        wp_enqueue_script(
-            'fc-autoposter-app',
-            'http://localhost:5173/src/main.js',
-            array(),
-            null,
-            true
-        );
+        // Only enable in development environments
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            $dev_server_url = defined('FC_AUTOPOSTER_DEV_SERVER') ? FC_AUTOPOSTER_DEV_SERVER : 'http://localhost:5173';
+            
+            wp_enqueue_script(
+                'fc-autoposter-vite-client',
+                $dev_server_url . '/@vite/client',
+                array(),
+                null,
+                true
+            );
+            wp_enqueue_script(
+                'fc-autoposter-app',
+                $dev_server_url . '/src/main.js',
+                array(),
+                null,
+                true
+            );
+        } else {
+            // Production build missing - show admin notice
+            add_action('admin_notices', function() {
+                echo '<div class="notice notice-error"><p>';
+                echo 'FC Autoposter: Production build not found. Please run <code>npm run build</code> in the admin directory.';
+                echo '</p></div>';
+            });
+        }
     } else {
         // Production mode - load from dist
-        $manifest = json_decode(file_get_contents($manifest_path), true);
+        $manifest_content = file_get_contents($manifest_path);
+        if ($manifest_content === false) {
+            error_log('FC Autoposter: Unable to read manifest file');
+            return;
+        }
+        
+        $manifest = json_decode($manifest_content, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            error_log('FC Autoposter: Invalid JSON in manifest file: ' . json_last_error_msg());
+            return;
+        }
+        
+        if (!isset($manifest['src/main.js'])) {
+            error_log('FC Autoposter: Invalid manifest structure');
+            return;
+        }
         
         // Enqueue CSS
         if (isset($manifest['src/main.js']['css'])) {

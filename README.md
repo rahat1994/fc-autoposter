@@ -34,14 +34,26 @@ A WordPress plugin with Vue 3 and Vite admin panel.
 
 To develop with hot module replacement:
 
-1. Start the Vite dev server:
+1. Enable WordPress debug mode in `wp-config.php`:
+   ```php
+   define('WP_DEBUG', true);
+   ```
+
+2. (Optional) Configure custom dev server URL in `wp-config.php`:
+   ```php
+   define('FC_AUTOPOSTER_DEV_SERVER', 'http://localhost:5173');
+   ```
+
+3. Start the Vite dev server:
    ```bash
    cd admin
    npm run dev
    ```
 
-2. The admin panel will automatically load from the dev server at `http://localhost:5173`
-3. Make changes to Vue components in `admin/src/` and see them reflected instantly
+4. The admin panel will automatically load from the dev server at `http://localhost:5173`
+5. Make changes to Vue components in `admin/src/` and see them reflected instantly
+
+**Note:** Development mode only works when `WP_DEBUG` is enabled for security reasons.
 
 ## Production Build
 
