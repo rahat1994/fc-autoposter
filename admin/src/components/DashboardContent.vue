@@ -60,6 +60,10 @@
               Generate New Post
             </Button>
             <Button variant="outline" class="w-full justify-start" @click="viewSchedule">
+              <Icon name="repeat" class="mr-2 h-4 w-4" />
+              Recurring Posting Agents
+            </Button>
+            <Button variant="outline" class="w-full justify-start" @click="viewSchedule">
               <Icon name="calendar" class="mr-2 h-4 w-4" />
               View Schedule
             </Button>
