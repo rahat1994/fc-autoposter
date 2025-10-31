@@ -23,8 +23,9 @@ const mainNavItems = ref([
   { name: 'Dashboard', icon: 'home', route: 'dashboard' },
   { name: 'Posts', icon: 'fileText', route: 'posts' },
   { name: 'Agents', icon: 'fileText', route: 'agents' },
-  { name: 'Schedule', icon: 'calendar', route: 'schedule' },
-  { name: 'Analytics', icon: 'barChart3', route: 'analytics' },
+  // { name: 'Integrations', icon: 'fileText', route: 'integrations' },
+  // { name: 'Schedule', icon: 'calendar', route: 'schedule' },
+  // { name: 'Analytics', icon: 'barChart3', route: 'analytics' },
 ])
 
 const bottomNavItems = ref([

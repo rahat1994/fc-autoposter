@@ -23,6 +23,14 @@ const routes = [
     }
   },
   {
+    path: '/integrations',
+    name: 'Integrations',
+    component: () => import('../views/Integrations.vue'),
+    meta: {
+      title: 'Integrations'
+    }
+  },
+  {
     path: '/posts',
     name: 'Posts',
     component: () => import('../views/PostsView.vue'),
