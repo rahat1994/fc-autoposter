@@ -1,14 +1,14 @@
 <template>
   <div class="min-h-screen bg-background">
     <!-- Sidebar -->
-    <!-- <Sidebar 
+    <Sidebar 
       :is-mobile-open="sidebarOpen" 
       @close-mobile="sidebarOpen = false"
       @navigate="handleNavigation"
-    /> -->
+    />
 
     <!-- Main content area -->
-    <div>
+    <div class="lg:ml-72">
       <!-- Top navigation for mobile -->
       <div class="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b bg-background px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8 lg:hidden">
         <Button variant="ghost" size="icon" @click="sidebarOpen = true">
@@ -27,7 +27,7 @@
       <!-- Page content -->
       <main class="py-6">
         <div class="px-4 sm:px-6 lg:px-8">
-          <slot :current-route="currentRoute" />
+          <slot />
         </div>
       </main>
     </div>
@@ -36,14 +36,15 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import Sidebar from './Sidebar.vue'
 import { Button, Icon } from '@/components/ui'
 
+const router = useRouter()
 const sidebarOpen = ref(false)
-const currentRoute = ref('dashboard')
 
 const handleNavigation = (route) => {
-  currentRoute.value = route
-  console.log(`Navigating to: ${route}`)
+  router.push(`/${route}`)
+  sidebarOpen.value = false
 }
 </script>

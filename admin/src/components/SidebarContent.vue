@@ -1,44 +1,97 @@
-<template>
-  <Navigation class="flex flex-1 flex-col space-y-1">
-    <!-- Main Navigation -->
-    <div class="space-y-1">
-      <NavigationLink 
-        v-for="item in mainNavItems" 
-        :key="item.name"
-        :class="cn(
-          'w-full justify-start text-left',
-          item.current ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'
-        )"
-        variant="ghost"
-        @click="navigate(item.route)"
-      >
-        <Icon :name="item.icon" class="mr-3 h-4 w-4" />
-        {{ item.name }}
-      </NavigationLink>
-    </div>
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { Icon, Card } from '@/components/ui'
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuIndicator,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  NavigationMenuViewport,
+} from "@/components/ui/navigation-menu"
+import { cn } from '@/lib/utils'
 
-    <!-- Divider -->
-    <div class="my-4 border-t border-border"></div>
+const router = useRouter()
+const route = useRoute()
+const emit = defineEmits(['navigate'])
+
+// Navigation items
+const mainNavItems = ref([
+  { name: 'Dashboard', icon: 'home', route: 'dashboard' },
+  { name: 'Posts', icon: 'fileText', route: 'posts' },
+  { name: 'Agents', icon: 'fileText', route: 'agents' },
+  { name: 'Schedule', icon: 'calendar', route: 'schedule' },
+  { name: 'Analytics', icon: 'barChart3', route: 'analytics' },
+])
+
+const bottomNavItems = ref([
+  { name: 'Settings', icon: 'settings', route: 'settings' },
+  { name: 'Help & Support', icon: 'helpCircle', route: 'help' },
+])
+
+// Compute current route name
+const currentRoute = computed(() => {
+  const name = route.name as string | undefined
+  return name?.toLowerCase() || 'dashboard'
+})
+
+const navigate = (routeName: string) => {
+  router.push(`/${routeName}`)
+  emit('navigate', routeName)
+}
+
+const isActive = (itemRoute: string) => {
+  return currentRoute.value === itemRoute
+}
+</script>
+
+<template>
+  <div class="flex flex-1 flex-col space-y-1">
+    <!-- Main Navigation -->
+    <NavigationMenu class="w-full justify-start">
+      <NavigationMenuList class="flex flex-col space-y-1 w-full">
+        <NavigationMenuItem v-for="item in mainNavItems" :key="item.name" class="w-full cursor-pointer">
+          <NavigationMenuLink
+            :class="cn(
+              'w-full px-3 py-2 rounded-md text-sm font-medium text-left flex items-center',
+              isActive(item.route) 
+                ? 'bg-accent text-accent-foreground' 
+                : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+            )"
+            @click="navigate(item.route)"
+          >
+            <Icon :name="item.icon" class="mr-3 h-4 w-4" />
+            {{ item.name }}
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+      </NavigationMenuList>
+    </NavigationMenu>
 
     <!-- Divider -->
     <div class="my-4 border-t border-border"></div>
 
     <!-- Settings & Help -->
-    <div class="space-y-1">
-      <NavigationLink 
-        v-for="item in bottomNavItems" 
-        :key="item.name"
-        :class="cn(
-          'w-full justify-start text-left',
-          item.current ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'
-        )"
-        variant="ghost"
-        @click="navigate(item.route)"
-      >
-        <Icon :name="item.icon" class="mr-3 h-4 w-4" />
-        {{ item.name }}
-      </NavigationLink>
-    </div>
+    <NavigationMenu class="w-full justify-start">
+      <NavigationMenuList class="flex flex-col space-y-1 w-full">
+        <NavigationMenuItem v-for="item in bottomNavItems" :key="item.name" class="w-full">
+          <NavigationMenuLink
+            :class="cn(
+              'w-full px-3 py-2 rounded-md text-sm font-medium text-left flex items-center',
+              isActive(item.route) 
+                ? 'bg-accent text-accent-foreground' 
+                : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+            )"
+            @click="navigate(item.route)"
+          >
+            <Icon :name="item.icon" class="mr-3 h-4 w-4" />
+            {{ item.name }}
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+      </NavigationMenuList>
+    </NavigationMenu>
 
     <!-- User Profile Section (at bottom) -->
     <div class="mt-auto pt-4">
@@ -54,43 +107,5 @@
         </div>
       </Card>
     </div>
-  </Navigation>
+  </div>
 </template>
-
-<script setup>
-import { ref } from 'vue'
-import { Navigation, NavigationLink, Icon, Card } from '@/components/ui'
-import { cn } from '@/lib/utils'
-
-const emit = defineEmits(['navigate'])
-
-// Navigation items
-const mainNavItems = ref([
-  { name: 'Dashboard', icon: 'home', route: 'dashboard', current: true },
-  { name: 'Posts', icon: 'fileText', route: 'posts', current: false },
-  { name: 'Schedule', icon: 'calendar', route: 'schedule', current: false },
-  { name: 'Analytics', icon: 'barChart3', route: 'analytics', current: false },
-  { name: 'Templates', icon: 'layout', route: 'templates', current: false },
-])
-
-const socialAccounts = ref([
-  { name: 'Twitter', icon: 'twitter', route: 'twitter', connected: true },
-  { name: 'Facebook', icon: 'facebook', route: 'facebook', connected: false },
-  { name: 'LinkedIn', icon: 'linkedin', route: 'linkedin', connected: true },
-  { name: 'Instagram', icon: 'instagram', route: 'instagram', connected: false },
-])
-
-const bottomNavItems = ref([
-  { name: 'Settings', icon: 'settings', route: 'settings', current: false },
-  { name: 'Help & Support', icon: 'helpCircle', route: 'help', current: false },
-])
-
-const navigate = (route) => {
-  // Update current state
-  mainNavItems.value.forEach(item => item.current = item.route === route)
-  bottomNavItems.value.forEach(item => item.current = item.route === route)
-  
-  // Emit navigation event
-  emit('navigate', route)
-}
-</script>

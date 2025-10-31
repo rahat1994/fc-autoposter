@@ -61,7 +61,11 @@
             </Button>
             <Button variant="outline" class="w-full justify-start" @click="viewSchedule">
               <Icon name="repeat" class="mr-2 h-4 w-4" />
-              Recurring Posting Agents
+              Posting Agents
+            </Button>
+            <Button variant="outline" class="w-full justify-start" @click="viewSchedule">
+              <Icon name="MessageCircleMore" class="mr-2 h-4 w-4" />
+              Commenting Agents
             </Button>
             <Button variant="outline" class="w-full justify-start" @click="viewSchedule">
               <Icon name="calendar" class="mr-2 h-4 w-4" />
@@ -268,6 +272,16 @@
               />
             </PopoverContent>
           </Popover>
+        </div>
+
+        <div class="space-y-2">
+          <Label for="post-time">Publish Time</Label>
+          <input
+            id="post-time"
+            v-model="newPostTime"
+            type="time"
+            class="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          />
         </div>
       </div>
 
@@ -546,6 +560,7 @@ const showGenerateModal = ref(false)
 const selectedPost = ref(null)
 const newPostPrompt = ref('')
 const newPostDate = ref('')
+const newPostTime = ref('')
 
 // Table columns for recent posts
 const postsColumns = [
@@ -716,10 +731,12 @@ const generateNewPost = () => {
     // Here you would typically call an API to generate the post
     console.log('Generating new post with prompt:', newPostPrompt.value)
     console.log('Publish date:', newPostDate.value)
+    console.log('Publish time:', newPostTime.value)
     // For now, we'll just close the modal and reset the prompt
     showGenerateModal.value = false
     newPostPrompt.value = ''
     newPostDate.value = ''
+    newPostTime.value = ''
   }
 }
 
@@ -727,6 +744,7 @@ const closeGenerateModal = () => {
   showGenerateModal.value = false
   newPostPrompt.value = ''
   newPostDate.value = ''
+  newPostTime.value = ''
 }
 
 // Comment action methods
