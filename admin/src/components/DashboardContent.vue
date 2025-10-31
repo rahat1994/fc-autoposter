@@ -183,70 +183,6 @@
       </DialogFooter>
     </DialogContent>
   </Dialog>
-
-  <!-- Generate New Post Modal -->
-  <Dialog v-model:open="showGenerateModal">
-    <DialogContent class="max-w-md">
-      <DialogHeader>
-        <DialogTitle>Generate New Post</DialogTitle>
-        <DialogDescription>
-          Enter a prompt to generate a new AI-powered post for your community.
-        </DialogDescription>
-      </DialogHeader>
-      
-      <div class="space-y-4 py-4">
-        <div class="space-y-2">
-          <Label for="post-prompt">Post Prompt</Label>
-          <Textarea
-            id="post-prompt"
-            v-model="newPostPrompt"
-            placeholder="Describe the topic, style, and any specific requirements for your post..."
-            class="min-h-[120px] resize-none"
-          />
-        </div>
-
-        <div class="space-y-2">
-          <Label>Publish Date</Label>
-          <Popover>
-            <PopoverTrigger as-child>
-              <Button
-                variant="outline"
-                class="w-full justify-start text-left font-normal"
-              >
-                <Icon name="calendar" class="mr-2 h-4 w-4" />
-                {{ newPostDate ? new Date(newPostDate).toLocaleDateString() : 'Pick a date' }}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent class="w-auto p-0" align="start">
-              <Calendar
-                v-model="newPostDate"
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        <div class="space-y-2">
-          <Label for="post-time">Publish Time</Label>
-          <input
-            id="post-time"
-            v-model="newPostTime"
-            type="time"
-            class="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-          />
-        </div>
-      </div>
-
-      <DialogFooter>
-        <Button variant="outline" @click="closeGenerateModal">
-          Cancel
-        </Button>
-        <Button @click="generateNewPost" :disabled="!newPostPrompt.trim()">
-          <Icon name="sparkles" class="mr-2 h-4 w-4" />
-          Generate Post
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
 </template>
 
 <script setup>
@@ -271,12 +207,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  Textarea,
-  Label,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-  Calendar
 } from '@/components/ui'
 import DataTable from '@/components/DataTable.vue'
 import QuickActions from './pices/quickActions.vue'
@@ -509,11 +439,7 @@ const aiIntegrations = ref([
 // Modal state for viewing posts
 // Modal states
 const showViewModal = ref(false)
-const showGenerateModal = ref(false)
 const selectedPost = ref(null)
-const newPostPrompt = ref('')
-const newPostDate = ref('')
-const newPostTime = ref('')
 
 // Table columns for recent posts
 const postsColumns = [
@@ -661,32 +587,6 @@ const deleteModalPost = () => {
 const closeModal = () => {
   showViewModal.value = false
   selectedPost.value = null
-}
-
-// Generate new post methods
-const openGenerateModal = () => {
-  showGenerateModal.value = true
-}
-
-const generateNewPost = () => {
-  if (newPostPrompt.value.trim()) {
-    // Here you would typically call an API to generate the post
-    console.log('Generating new post with prompt:', newPostPrompt.value)
-    console.log('Publish date:', newPostDate.value)
-    console.log('Publish time:', newPostTime.value)
-    // For now, we'll just close the modal and reset the prompt
-    showGenerateModal.value = false
-    newPostPrompt.value = ''
-    newPostDate.value = ''
-    newPostTime.value = ''
-  }
-}
-
-const closeGenerateModal = () => {
-  showGenerateModal.value = false
-  newPostPrompt.value = ''
-  newPostDate.value = ''
-  newPostTime.value = ''
 }
 
 // Comment action methods
