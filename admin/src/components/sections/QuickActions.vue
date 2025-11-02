@@ -27,7 +27,7 @@
                 Moderator Agents
             </Button>
             <Button variant="outline" disabled="true" class="w-full justify-start" @click="viewSchedule">
-                <Icon name="heartPlus" class="mr-2 h-4 w-4" />
+                <Icon name="headset" class="mr-2 h-4 w-4" />
                 Support Agents
             </Button>
             <Button variant="outline" disabled="true" class="w-full justify-start" @click="viewSchedule">
@@ -37,6 +37,10 @@
             <Button variant="outline" disabled="true" class="w-full justify-start" @click="viewSchedule">
                 <Icon name="chartPie" class="mr-2 h-4 w-4" />
                 Market Analyzer Agents
+            </Button>
+            <Button variant="outline" disabled="true" class="w-full justify-start" @click="viewSchedule">
+                <Icon name="heartPlus" class="mr-2 h-4 w-4" />
+                Onboarding agents
             </Button>
             <Button variant="outline" class="w-full justify-start" @click="openGenerateModal">
                 <Icon name="clock" class="mr-2 h-4 w-4" />
