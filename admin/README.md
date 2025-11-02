@@ -9,6 +9,7 @@ A modern, responsive admin dashboard for the FC Autoposter WordPress plugin, bui
 - **Component-Based Architecture**: Modular Vue.js components for easy maintenance
 - **Real-time Statistics**: Dashboard cards showing key metrics
 - **Social Media Management**: Interface for managing connected accounts and posts
+- **AI Agents Management**: Complete interface for creating and managing AI assistants
 - **Demo Data Toggle**: Built-in demo data for testing and presentation
 
 ## Technology Stack
@@ -110,6 +111,137 @@ Flexible table component for displaying lists:
 **Events:**
 - `create`: Emitted when create button is clicked
 - `item-action`: Emitted when item action is triggered
+
+## AI Agents Feature
+
+The AI Agents management interface (`AgentsView.vue`) provides a comprehensive system for creating and managing AI assistants for your community automation.
+
+### Key Features
+
+#### Agent Management Dashboard
+- **Statistics Overview**: Real-time metrics showing total agents, active agents, interactions, and success rates
+- **Agent List Table**: Comprehensive data table with agent details, status indicators, and quick actions
+- **Empty State**: Encouraging empty state design for new users with call-to-action buttons
+- **Responsive Design**: Fully responsive interface that works on all devices
+
+#### Create Agent Modal
+A sophisticated modal dialog for agent creation with:
+
+**Basic Information Section:**
+- **Agent Name**: Required field with 50 character limit and real-time counter
+- **Description**: Optional textarea with 200 character limit for agent purpose
+
+**Agent Configuration Section:**
+- **Agent Type Dropdown**: Pre-defined options with availability status (Customer Support, Product Expert, News Summarizer, Data Analyzer, Content Writer, General Assistant). Each type includes metadata for disabled state, pro features, and coming soon indicators.
+- **AI Model Selection**: Choose from GPT-4, GPT-3.5, Claude, or Custom models
+- **System Instructions**: Required textarea for defining agent behavior and guidelines
+
+**Capabilities Section:**
+- **Web Search Toggle**: Enable/disable web search capabilities
+- **File Processing Toggle**: Enable/disable file analysis features
+
+**Validation & UX:**
+- Real-time form validation with inline error messages
+- Character counters for text inputs
+- Disabled submit button until all required fields are valid
+- Limitation notice about single agent restriction
+
+#### Agent Details Modal
+Detailed view modal showing:
+- Complete agent configuration and metadata
+- System instructions display
+- Capabilities overview with badges
+- Creation and modification timestamps
+- Quick action buttons (Edit, Delete)
+
+#### Agent Actions
+- **View Agent**: Opens detailed modal with all agent information
+- **Edit Agent**: Pre-populates creation form for modifications
+- **Activate/Deactivate**: Toggle agent status with immediate UI updates
+- **Delete Agent**: Remove agents with confirmation
+
+### Technical Implementation
+
+#### Reactive Data Management
+```javascript
+// Computed statistics that update automatically
+const agentStats = computed(() => [
+  { title: 'Total Agents', value: agents.value.length.toString(), icon: 'bot' },
+  { title: 'Active Agents', value: agents.value.filter(a => a.status === 'Active').length.toString(), icon: 'activity' },
+  // ... more stats
+])
+
+// Form validation with real-time error handling
+const isFormValid = computed(() => {
+  return formData.value.name.trim() !== '' &&
+         formData.value.type !== '' &&
+         formData.value.model !== '' &&
+         formData.value.systemPrompt.trim() !== ''
+})
+```
+
+#### Data Table Configuration
+Custom column definitions with:
+- **Agent Details Column**: Multi-line display with name, description, model info, and interaction count
+- **Status Column**: Dynamic badge with color-coded status indicators
+- **Actions Column**: Dropdown menu with contextual actions
+
+#### Agent Type Configuration
+Rich type system with metadata:
+```javascript
+const agentTypes = {
+    'customer-support': { label: 'Customer Support', disabled: true, pro: false, comingSoon: true },
+    'content-writer': { label: 'Content Writer', disabled: false, pro: false, comingSoon: false },
+    // ... more types
+}
+
+// Helper functions
+const getAgentTypeInfo = (type) => agentTypes[type] || defaultInfo
+const isAgentTypeAvailable = (type) => !getAgentTypeInfo(type).disabled
+```
+
+#### Form Validation
+Comprehensive validation system:
+- Required field validation for name, type, model, and system prompt
+- Character limit enforcement with visual feedback
+- Real-time error display with field-level messaging
+- Form state management preventing invalid submissions
+
+### Usage Guidelines
+
+#### Getting Started
+1. **Empty State**: New users see an encouraging empty state with clear next steps
+2. **Create First Agent**: Click "Create Your First Agent" to open the creation modal
+3. **Fill Required Fields**: Name, type, model selection, and system instructions
+4. **Configure Capabilities**: Enable web search and file processing as needed
+5. **Submit**: Agent is created and immediately visible in the dashboard
+
+#### Best Practices
+- **Clear Naming**: Use descriptive names that indicate the agent's purpose
+- **Detailed Instructions**: Provide comprehensive system prompts for better AI behavior
+- **Appropriate Type**: Select the agent type that best matches intended use case
+- **Model Selection**: Choose AI model based on complexity needs and cost considerations
+
+#### Agent Types & Use Cases
+- **Customer Support**: Handle inquiries, provide assistance, troubleshoot issues
+- **Sales Assistant**: Lead qualification, product information, sales support
+- **Data Analyzer**: Process data, generate insights, create reports
+- **Content Writer**: Create posts, articles, social media content
+- **General Assistant**: Multi-purpose tasks, general inquiries, basic automation
+
+### Component Architecture
+Built with modular Vue 3 components:
+- **AgentsView.vue**: Main container component
+- **DataTable.vue**: Reusable table component with sorting and search
+- **Various UI components**: Cards, modals, forms, badges, buttons
+- **Shadcn/ui components**: Modern, accessible component library
+
+### Future Enhancements
+- **Multi-Agent Support**: Currently limited to 1 agent, expansion planned
+- **Agent Templates**: Pre-configured agent types for quick setup
+- **Advanced Configuration**: Custom model parameters, response formatting
+- **Analytics Dashboard**: Detailed agent performance metrics
+- **Agent Collaboration**: Multiple agents working together on tasks
 
 ## Tailwind CSS Configuration
 

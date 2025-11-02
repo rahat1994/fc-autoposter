@@ -203,13 +203,12 @@ import {
   DropdownMenuTrigger,
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
 } from '@/components/ui'
 import DataTable from '@/components/DataTable.vue'
-import QuickActions from './pices/quickActions.vue'
+import QuickActions from './sections/QuickActions.vue'
 import { getAiIcon } from '@/lib/utils'
 
 // Sample data
