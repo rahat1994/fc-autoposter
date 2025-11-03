@@ -22,6 +22,14 @@ const routes = [
       title: 'Agents'
     }
   },
+    {
+    path: '/content-instructions',
+    name: 'Content Instructions',
+    component: () => import('../views/ContentInstructionsView.vue'),
+    meta: {
+      title: 'Agents'
+    }
+  },
   {
     path: '/integrations',
     name: 'Integrations',
