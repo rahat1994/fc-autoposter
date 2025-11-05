@@ -196,7 +196,7 @@ class Router {
     /**
      * Find a route that matches the request
      */
-    public function match($method, $uri) {
+    public function findRoute($method, $uri) {
         foreach ($this->routes as $route) {
             if ($route->matches($method, $uri)) {
                 return $route;
@@ -210,7 +210,7 @@ class Router {
      * Dispatch the request to the matched route
      */
     public function dispatch($request) {
-        $route = $this->match($request->method(), $request->uri());
+        $route = $this->findRoute($request->method(), $request->uri());
         
         if (!$route) {
             return Response::notFound('Route not found');
