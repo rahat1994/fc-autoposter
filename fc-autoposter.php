@@ -20,6 +20,16 @@ define('FC_AUTOPOSTER_VERSION', '1.0.0');
 define('FC_AUTOPOSTER_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('FC_AUTOPOSTER_PLUGIN_URL', plugin_dir_url(__FILE__));
 
+// Load autoloader
+require_once FC_AUTOPOSTER_PLUGIN_DIR . 'includes/autoloader.php';
+
+// Bootstrap routing system
+function fc_autoposter_bootstrap_routing() {
+    $routeProvider = new \FCAutoposter\Routing\RouteServiceProvider();
+    $routeProvider->boot();
+}
+add_action('init', 'fc_autoposter_bootstrap_routing');
+
 /**
  * Add admin menu
  */

@@ -8,6 +8,10 @@ A WordPress plugin with Vue 3 and Vite admin panel.
 - Vue 3 for reactive UI components
 - Vite for fast development and optimized builds
 - Hot Module Replacement (HMR) in development mode
+- **Laravel-style PHP routing system** for building REST APIs
+- MVC architecture with Controllers and Middleware
+- Built-in authentication and authorization
+- Input validation helpers
 
 ## Installation
 
@@ -78,12 +82,37 @@ fc-autoposter/
 │   ├── dist/              # Production build output (generated)
 │   ├── package.json       # Node dependencies
 │   └── vite.config.js     # Vite configuration
-└── README.md
+├── includes/               # PHP backend classes
+│   ├── Routing/           # Routing system
+│   ├── Controllers/       # API controllers
+│   ├── Middleware/        # Request middleware
+│   └── autoloader.php     # Class autoloader
+├── routes/
+│   └── api.php            # API route definitions
+├── README.md
+└── ROUTING.md             # Routing system documentation
 ```
 
 ## Usage
 
 After activating the plugin, you'll find "FC Autoposter" in the WordPress admin menu. Click it to access the admin panel powered by Vue 3.
+
+### API Development
+
+The plugin includes a Laravel-style routing system for building REST APIs. See [ROUTING.md](ROUTING.md) for complete documentation.
+
+Quick example:
+
+```php
+// In routes/api.php
+$router->get('/hello', function($request) {
+    return Response::success('Hello from API!');
+});
+
+// Access at: http://your-site.com/wp-json/fc-autoposter/v1/hello
+```
+
+For more details, see the [complete routing documentation](ROUTING.md).
 
 ## Requirements
 
