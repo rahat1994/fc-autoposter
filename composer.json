@@ -1,0 +1,43 @@
+{
+    "name": "rahat1994/fc-autoposter",
+    "description": "A WordPress plugin with Vue and Vite admin panel for automated posting",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Rahat",
+            "email": "rahat@example.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "FCAutoposter\\": "app/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "FCAutoposter\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "classmap-authoritative": false,
+        "platform": {
+            "php": "7.4"
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "@php -r \"file_exists('vendor/bin/phpunit') || exit(0); echo 'PHPUnit is available for testing\\n';\""
+        ],
+        "test": "phpunit",
+        "test-coverage": "phpunit --coverage-html=coverage",
+        "autoload": "composer dump-autoload -o"
+    }
+}

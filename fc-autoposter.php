@@ -20,8 +20,19 @@ define('FC_AUTOPOSTER_VERSION', '1.0.0');
 define('FC_AUTOPOSTER_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('FC_AUTOPOSTER_PLUGIN_URL', plugin_dir_url(__FILE__));
 
-// Load autoloader
-require_once FC_AUTOPOSTER_PLUGIN_DIR . 'includes/autoloader.php';
+// Load Composer autoloader
+if (file_exists(FC_AUTOPOSTER_PLUGIN_DIR . 'vendor/autoload.php')) {
+    require_once FC_AUTOPOSTER_PLUGIN_DIR . 'vendor/autoload.php';
+} else {
+    // Fallback error message
+    add_action('admin_notices', function() {
+        echo '<div class="notice notice-error"><p>';
+        echo '<strong>FC Autoposter:</strong> Composer autoloader not found. ';
+        echo 'Please run <code>composer install</code> in the plugin directory.';
+        echo '</p></div>';
+    });
+    return;
+}
 
 // Bootstrap routing system
 function fc_autoposter_bootstrap_routing() {
@@ -153,6 +164,16 @@ function fc_autoposter_enqueue_admin_scripts($hook) {
             true
         );
         
+        // Localize script with WordPress data for development
+        wp_localize_script('fc-autoposter-dev-app', 'fcAutoposterAdmin', [
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('wp_rest'),
+            'customNonce' => wp_create_nonce('fc_autoposter_nonce'),
+            'restUrl' => rest_url('fc-autoposter/v1/'),
+            'pluginUrl' => FC_AUTOPOSTER_PLUGIN_URL,
+            'currentUser' => get_current_user_id(),
+        ]);
+        
         // // Add admin notice for development mode
         // if (defined('WP_DEBUG') && WP_DEBUG) {
         //     add_action('admin_notices', function() use ($dev_server_url) {
@@ -225,6 +246,16 @@ function fc_autoposter_enqueue_admin_scripts($hook) {
                 }
                 return $tag;
             }, 10, 3);
+            
+            // Localize script with WordPress data for production
+            wp_localize_script('fc-autoposter-app', 'fcAutoposterAdmin', [
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('wp_rest'),
+                'customNonce' => wp_create_nonce('fc_autoposter_nonce'),
+                'restUrl' => rest_url('fc-autoposter/v1/'),
+                'pluginUrl' => FC_AUTOPOSTER_PLUGIN_URL,
+                'currentUser' => get_current_user_id(),
+            ]);
         }
         
         // Add admin notice for production mode

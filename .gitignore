@@ -1,6 +1,8 @@
 # Dependencies
 node_modules/
 admin/node_modules/
+vendor/
+composer.lock
 
 # Build output
 admin/dist/

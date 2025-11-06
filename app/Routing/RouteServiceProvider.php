@@ -83,6 +83,9 @@ class RouteServiceProvider {
         // Convert route URI to WordPress REST API format
         $pattern = $this->convertUriPattern($uri);
         
+        // Log route registration
+        error_log("FC Autoposter: Registering route - {$this->namespace}/{$pattern} - Methods: " . implode(',', $methods) . " - Middleware: " . implode(',', $route->getMiddleware()));
+        
         // Register with WordPress REST API
         register_rest_route($this->namespace, $pattern, [
             'methods' => $methods,
@@ -108,6 +111,9 @@ class RouteServiceProvider {
      */
     protected function handleRequest(\WP_REST_Request $wp_request, Route $route) {
         try {
+            // Log incoming request
+            error_log("FC Autoposter: Handling request - URI: " . $route->getUri() . " - Method: " . $wp_request->get_method() . " - Middleware: " . implode(',', $route->getMiddleware()));
+            
             // Create our custom request object
             $request = $this->createRequest($wp_request);
             
@@ -159,11 +165,16 @@ class RouteServiceProvider {
     protected function runMiddleware(Route $route, Request $request) {
         $middlewareList = $route->getMiddleware();
         
+        error_log("FC Autoposter: Running middleware pipeline - Middleware count: " . count($middlewareList) . " - List: " . implode(',', $middlewareList));
+        
         foreach ($middlewareList as $middleware) {
             // Get middleware class
             $middlewareClass = $this->router->getMiddleware($middleware);
             
+            error_log("FC Autoposter: Processing middleware - Name: {$middleware} - Class: " . ($middlewareClass ?: 'NOT_FOUND'));
+            
             if (!$middlewareClass || !class_exists($middlewareClass)) {
+                error_log("FC Autoposter: Middleware class not found or doesn't exist - {$middleware}");
                 continue;
             }
             
@@ -175,8 +186,11 @@ class RouteServiceProvider {
                     return $request;
                 });
                 
+                error_log("FC Autoposter: Middleware {$middleware} executed - Result type: " . gettype($result));
+                
                 // If middleware returns a response, stop execution
                 if ($result instanceof Response) {
+                    error_log("FC Autoposter: Middleware {$middleware} returned response - Status: " . $result->getStatus());
                     return $result;
                 }
             }
@@ -189,8 +203,35 @@ class RouteServiceProvider {
      * Check permissions for route
      */
     protected function checkPermissions(\WP_REST_Request $wp_request, Route $route) {
-        // Always allow - middleware will handle authorization
-        // This is because WordPress REST API requires permission_callback
+        $middleware = $route->getMiddleware();
+        
+        // If route has no middleware, allow access (public route)
+        if (empty($middleware)) {
+            error_log("FC Autoposter: Permission check - No middleware, allowing access");
+            return true;
+        }
+        
+        // If route has auth middleware, check if user is logged in
+        if (in_array('auth', $middleware)) {
+            $is_logged_in = is_user_logged_in();
+            error_log("FC Autoposter: Permission check - Auth middleware, user logged in: " . ($is_logged_in ? 'YES' : 'NO'));
+            
+            if (!$is_logged_in) {
+                return new \WP_Error('rest_forbidden', 'Authentication required.', array('status' => 401));
+            }
+        }
+        
+        // If route has admin middleware, check if user can manage options
+        if (in_array('admin', $middleware)) {
+            $can_manage = current_user_can('manage_options');
+            error_log("FC Autoposter: Permission check - Admin middleware, can manage options: " . ($can_manage ? 'YES' : 'NO'));
+            
+            if (!$can_manage) {
+                return new \WP_Error('rest_forbidden', 'Admin access required.', array('status' => 403));
+            }
+        }
+        
+        error_log("FC Autoposter: Permission check - All checks passed");
         return true;
     }
     

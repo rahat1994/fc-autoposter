@@ -21,18 +21,24 @@ A WordPress plugin with Vue 3 and Vite admin panel.
    git clone https://github.com/rahat1994/fc-autoposter.git
    ```
 
-2. Install dependencies:
+2. Install PHP dependencies with Composer:
    ```bash
-   cd fc-autoposter/admin
+   cd fc-autoposter
+   composer install --no-dev
+   ```
+
+3. Install Node.js dependencies:
+   ```bash
+   cd admin
    npm install
    ```
 
-3. Build the admin panel:
+4. Build the admin panel:
    ```bash
    npm run build
    ```
 
-4. Activate the plugin in WordPress admin panel (Plugins > Installed Plugins > FC Autoposter > Activate)
+5. Activate the plugin in WordPress admin panel (Plugins > Installed Plugins > FC Autoposter > Activate)
 
 ## Development
 
@@ -75,6 +81,8 @@ This will create optimized files in the `admin/dist/` directory.
 ```
 fc-autoposter/
 ├── fc-autoposter.php       # Main plugin file
+├── composer.json           # PHP dependency management
+├── vendor/                 # Composer dependencies (auto-generated)
 ├── admin/                  # Admin panel Vue app
 │   ├── src/
 │   │   ├── main.js        # Vue app entry point
@@ -82,11 +90,10 @@ fc-autoposter/
 │   ├── dist/              # Production build output (generated)
 │   ├── package.json       # Node dependencies
 │   └── vite.config.js     # Vite configuration
-├── includes/               # PHP backend classes
+├── app/                    # PHP backend classes (renamed from includes/)
 │   ├── Routing/           # Routing system
 │   ├── Controllers/       # API controllers
-│   ├── Middleware/        # Request middleware
-│   └── autoloader.php     # Class autoloader
+│   └── Middleware/        # Request middleware
 ├── routes/
 │   └── api.php            # API route definitions
 ├── README.md

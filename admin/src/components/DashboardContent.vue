@@ -186,7 +186,7 @@
 </template>
 
 <script setup>
-import { ref, h } from 'vue'
+import { ref, h, onMounted } from 'vue'
 import { 
   Card, 
   CardHeader, 
@@ -210,6 +210,55 @@ import {
 import DataTable from '@/components/DataTable.vue'
 import QuickActions from './sections/QuickActions.vue'
 import { getAiIcon } from '@/lib/utils'
+
+// Test API function
+const testApi = async () => {
+  try {
+    // Use the rest URL from localized data if available
+    const baseUrl = window.fcAutoposterAdmin?.restUrl || '/wp-json/fc-autoposter/v1/'
+    const url = `${baseUrl}test`
+    const nonce = window.fcAutoposterAdmin?.nonce || ''
+    const customNonce = window.fcAutoposterAdmin?.customNonce || ''
+    
+    console.log('Making API request:', {
+      url,
+      nonce,
+      customNonce,
+      hasNonce: !!nonce,
+      hasCustomNonce: !!customNonce,
+      adminData: window.fcAutoposterAdmin
+    })
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-WP-Nonce': nonce
+      }
+    })
+    
+    console.log('Response status:', response.status)
+    console.log('Response headers:', [...response.headers.entries()])
+    
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('API Error Response:', errorText)
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
+    }
+    
+    const data = await response.json()
+    console.log('Test API Response:', data)
+  } catch (error) {
+    console.error('Test API Error:', error)
+  }
+}
+
+// Mount lifecycle
+onMounted(() => {
+  console.log('DashboardContent mounted - making test API request')
+  console.log('WordPress Admin Data:', window.fcAutoposterAdmin)
+  testApi()
+})
 
 // Sample data
 const stats = ref([
