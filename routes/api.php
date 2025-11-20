@@ -101,3 +101,55 @@ $router->group(['middleware' => 'auth'], function($router) {
 // Add your custom routes below this line
 // Example:
 // $router->get('/my-endpoint', 'MyController@myMethod')->name('my.route');
+
+// Agent routes with authentication and admin middleware
+$router->group(['prefix' => 'agents', 'middleware' => ['auth', 'admin']], function($router) {
+    
+    // GET /agents - List all agents
+    $router->get('/', 'AgentController@index')->name('agents.index');
+    
+    // POST /agents - Create new agent
+    $router->post('/', 'AgentController@store')->name('agents.store');
+    
+    // GET /agents/stats - Get agent statistics
+    $router->get('/stats', 'AgentController@stats')->name('agents.stats');
+    
+    // GET /agents/{id} - Get specific agent
+    $router->get('/{id}', 'AgentController@show')->name('agents.show');
+    
+    // PUT /agents/{id} - Update agent
+    $router->put('/{id}', 'AgentController@update')->name('agents.update');
+    
+    // PATCH /agents/{id} - Partial update agent
+    $router->patch('/{id}', 'AgentController@update')->name('agents.patch');
+    
+    // DELETE /agents/{id} - Delete agent
+    $router->delete('/{id}', 'AgentController@destroy')->name('agents.destroy');
+    
+    // POST /agents/{id}/toggle-status - Toggle agent status
+    $router->post('/{id}/toggle-status', 'AgentController@toggleStatus')->name('agents.toggle-status');
+    
+    // POST /agents/{id}/interactions - Increment interaction count
+    $router->post('/{id}/interactions', 'AgentController@incrementInteractions')->name('agents.increment-interactions');
+});
+
+// Public agent routes (for external integrations)
+$router->group(['prefix' => 'public/agents'], function($router) {
+    
+    // GET /public/agents - List active agents only
+    $router->get('/', function($request) {
+        $agents = \FCAutoposter\Models\Agent::active();
+        $agents_data = array_map(function($agent) {
+            // Return limited public data
+            return [
+                'id' => $agent->id,
+                'name' => $agent->name,
+                'description' => $agent->description,
+                'type' => $agent->type,
+                'status' => $agent->status
+            ];
+        }, $agents);
+        
+        return \FCAutoposter\Routing\Response::success('Active agents retrieved', $agents_data);
+    })->name('public.agents.index');
+});

@@ -156,6 +156,18 @@ class RouteServiceProvider {
         }
         $request->setParams($params);
         
+        // Set query parameters
+        $request->setQuery($wp_request->get_query_params());
+        
+        // Set body parameters  
+        $request->setBody($wp_request->get_body_params());
+        
+        // Set JSON body if present
+        $json_params = $wp_request->get_json_params();
+        if (!empty($json_params)) {
+            $request->mergeBody($json_params);
+        }
+        
         return $request;
     }
     

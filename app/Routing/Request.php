@@ -119,6 +119,27 @@ class Request {
     }
     
     /**
+     * Set query parameters
+     */
+    public function setQuery($query) {
+        $this->query = $query;
+    }
+    
+    /**
+     * Set body parameters
+     */
+    public function setBody($body) {
+        $this->body = $body;
+    }
+    
+    /**
+     * Merge body parameters
+     */
+    public function mergeBody($body) {
+        $this->body = array_merge($this->body, $body);
+    }
+    
+    /**
      * Get query parameter
      */
     public function query($key = null, $default = null) {
