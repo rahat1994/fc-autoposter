@@ -90,10 +90,61 @@ class AgentController {
                 return Response::error('Agent with this name already exists', null, 400);
             }
             
+            // Handle user creation if requested
+            $user_id = null;
+            if (!empty($data['create_user']) && $data['create_user'] == 1) {
+                // Validate username and email
+                if (empty($data['username'])) {
+                    return Response::error('Username is required when creating a user', null, 400);
+                }
+                if (empty($data['user_email'])) {
+                    return Response::error('Email is required when creating a user', null, 400);
+                }
+                
+                // Check if username already exists
+                if (username_exists($data['username'])) {
+                    return Response::error('Username already exists', null, 400);
+                }
+                
+                // Check if email already exists
+                if (email_exists($data['user_email'])) {
+                    return Response::error('Email already exists', null, 400);
+                }
+                
+                // Validate email format
+                if (!is_email($data['user_email'])) {
+                    return Response::error('Invalid email address', null, 400);
+                }
+                
+                // Create WordPress user
+                $user_data = [
+                    'user_login' => sanitize_user($data['username']),
+                    'user_email' => sanitize_email($data['user_email']),
+                    'user_pass' => wp_generate_password(12, true, true),
+                    'display_name' => $data['name'], // Use agent name as display name
+                    'role' => 'author', // Default role for agent users
+                    'description' => 'AI Agent: ' . $data['name']
+                ];
+                
+                $user_id = wp_insert_user($user_data);
+                
+                // Check for errors
+                if (is_wp_error($user_id)) {
+                    return Response::error('Failed to create WordPress user: ' . $user_id->get_error_message(), null, 500);
+                }
+                
+                // Store the user_id in the data
+                $data['user_id'] = $user_id;
+            }
+            
             // Create agent
             $agent = Agent::create($data);
             
             if (!$agent) {
+                // If agent creation failed but user was created, delete the user
+                if ($user_id) {
+                    wp_delete_user($user_id);
+                }
                 return Response::error('Failed to create agent', null, 500);
             }
             
