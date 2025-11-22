@@ -133,6 +133,12 @@ $router->group(['prefix' => 'agents', 'middleware' => ['auth', 'admin']], functi
     $router->post('/{id}/interactions', 'AgentController@incrementInteractions')->name('agents.increment-interactions');
 });
 
+// Settings routes
+$router->group(['prefix' => 'settings', 'middleware' => ['auth', 'admin']], function($router) {
+    $router->get('/', 'SettingsController@getSettings')->name('settings.get');
+    $router->post('/', 'SettingsController@saveSettings')->name('settings.save');
+});
+
 // Public agent routes (for external integrations)
 $router->group(['prefix' => 'public/agents'], function($router) {
     
@@ -152,4 +158,31 @@ $router->group(['prefix' => 'public/agents'], function($router) {
         
         return \FCAutoposter\Routing\Response::success('Active agents retrieved', $agents_data);
     })->name('public.agents.index');
+});
+// Content Instruction routes
+$router->group(['prefix' => 'content-instructions', 'middleware' => ['auth', 'admin']], function($router) {
+    
+    // GET /content-instructions - List all instructions
+    $router->get('/', 'ContentInstructionController@index')->name('content-instructions.index');
+    
+    // POST /content-instructions - Create new instruction
+    $router->post('/', 'ContentInstructionController@store')->name('content-instructions.store');
+    
+    // GET /content-instructions/{id} - Get specific instruction
+    $router->get('/{id}', 'ContentInstructionController@show')->name('content-instructions.show');
+    
+    // PUT /content-instructions/{id} - Update instruction
+    $router->put('/{id}', 'ContentInstructionController@update')->name('content-instructions.update');
+    
+    // DELETE /content-instructions/{id} - Delete instruction
+    $router->delete('/{id}', 'ContentInstructionController@destroy')->name('content-instructions.destroy');
+    
+    // POST /content-instructions/{id}/retry - Retry failed instruction
+    $router->post('/{id}/retry', 'ContentInstructionController@retry')->name('content-instructions.retry');
+});
+
+// Posts Routes
+$router->group(['prefix' => 'fa_fc_posts', 'middleware' => ['auth', 'admin']], function($router) {
+    $router->resource('/', 'PostController'); // This will handle /posts, /posts/{id} etc.
+    $router->post('/{id}/retry', 'PostController@retry')->name('posts.retry');
 });

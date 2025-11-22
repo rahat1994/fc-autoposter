@@ -25,21 +25,25 @@ class AgentController {
         try {
             $status = $request->query('status');
             $type = $request->query('type');
+            $page = (int) $request->query('page', 1);
+            $per_page = (int) $request->query('per_page', 5);
             
+            $where = [];
+            if ($status) {
+                $where['status'] = $status;
+            }
             if ($type) {
-                $agents = Agent::byType($type);
-            } elseif ($status) {
-                $agents = Agent::all($status);
-            } else {
-                $agents = Agent::all();
+                $where['type'] = $type;
             }
             
-            // Convert to arrays
-            $agents_data = array_map(function($agent) {
-                return $agent->toArray();
-            }, $agents);
+            $result = Agent::paginate($page, $per_page, $where);
             
-            return Response::success('Agents retrieved successfully', $agents_data);
+            // Convert objects to arrays
+            $result['data'] = array_map(function($agent) {
+                return $agent->toArray();
+            }, $result['data']);
+            
+            return Response::success('Agents retrieved successfully', $result);
             
         } catch (\Exception $e) {
             error_log('FC Autoposter Agent Controller Error: ' . $e->getMessage());

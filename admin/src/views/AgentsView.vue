@@ -14,7 +14,7 @@
       </div>
 
       <!-- Agent List Section -->
-      <div v-if="agents.length > 0">
+      <div v-if="agents.length > 0 || isLoading">
         <!-- Stats Row -->
         <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
           <Card v-for="stat in agentStats" :key="stat.title" class="p-6">
@@ -43,6 +43,12 @@
               :data="agents" 
               :columns="agentColumns"
               search-placeholder="Search agents..."
+              :manual-pagination="true"
+              :total="totalAgents"
+              :page-index="page - 1"
+              :page-size="perPage"
+              :loading="isLoading"
+              @page-change="handlePageChange"
             />
           </CardContent>
         </Card>
@@ -418,6 +424,9 @@ const agentStats = ref([
 const agents = ref([])
 const isLoading = ref(false)
 const isSaving = ref(false)
+const page = ref(1)
+const perPage = ref(5)
+const totalAgents = ref(0)
 
 
 // Modal states
@@ -570,14 +579,25 @@ const agentColumns = [
 const fetchAgents = async () => {
     isLoading.value = true
     try {
-        const response = await api.get('agents')
-        agents.value = response.data
+        const response = await api.get(`agents?page=${page.value}&per_page=${perPage.value}`)
+        if (response.data && response.data.data && response.data.meta) {
+             agents.value = response.data.data
+             totalAgents.value = response.data.meta.total
+        } else {
+             agents.value = Array.isArray(response.data) ? response.data : []
+             totalAgents.value = agents.value.length
+        }
     } catch (error) {
         console.error('Failed to fetch agents:', error)
         // TODO: Show toast notification
     } finally {
         isLoading.value = false
     }
+}
+
+const handlePageChange = (newPageIndex) => {
+    page.value = newPageIndex + 1
+    fetchAgents()
 }
 
 const fetchStats = async () => {

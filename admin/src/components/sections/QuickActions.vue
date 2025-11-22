@@ -15,18 +15,6 @@
                 Generate New Post
             </Button>
             <Button variant="outline" disabled="true" class="w-full justify-start" @click="viewSchedule">
-                <Icon name="MessageCircleMore" class="mr-2 h-4 w-4" />
-                Commenting Agents
-            </Button>
-            <Button variant="outline" disabled="true" class="w-full justify-start" @click="viewSchedule">
-                <Icon name="atSign" class="mr-2 h-4 w-4" />
-                Replying Agents
-            </Button>
-            <Button variant="outline" disabled="true" class="w-full justify-start" @click="viewSchedule">
-                <Icon name="siren" class="mr-2 h-4 w-4" />
-                Moderator Agents
-            </Button>
-            <Button variant="outline" disabled="true" class="w-full justify-start" @click="viewSchedule">
                 <Icon name="headset" class="mr-2 h-4 w-4" />
                 Support Agents
             </Button>
@@ -41,6 +29,18 @@
             <Button variant="outline" disabled="true" class="w-full justify-start" @click="viewSchedule">
                 <Icon name="heartPlus" class="mr-2 h-4 w-4" />
                 Onboarding agents
+            </Button>
+            <Button variant="outline" disabled="true" class="w-full justify-start" @click="viewSchedule">
+                <Icon name="MessageCircleMore" class="mr-2 h-4 w-4" />
+                Commenting Agents
+            </Button>
+            <Button variant="outline" disabled="true" class="w-full justify-start" @click="viewSchedule">
+                <Icon name="atSign" class="mr-2 h-4 w-4" />
+                Replying Agents
+            </Button>
+            <Button variant="outline" disabled="true" class="w-full justify-start" @click="viewSchedule">
+                <Icon name="siren" class="mr-2 h-4 w-4" />
+                Moderator Agents
             </Button>
             <Button variant="outline" class="w-full justify-start" @click="openGenerateModal">
                 <Icon name="clock" class="mr-2 h-4 w-4" />

@@ -39,6 +39,8 @@ class MigrationManager {
         // Register known migrations directly
         $migration_classes = [
             'FCAutoposter\\Database\\Migrations\\CreateFcFaAgentsTable',
+            'FCAutoposter\\Database\\Migrations\\CreateFcFaContentInstructionsTable',
+            'FCAutoposter\\Database\\Migrations\\CreateFcFaPostsTable'
         ];
         
         foreach ($migration_classes as $class_name) {

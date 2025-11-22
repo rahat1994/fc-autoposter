@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class Agent {
+class Agent extends BaseModel {
     
     /**
      * Table name without prefix
@@ -20,60 +20,26 @@ class Agent {
     protected static $table = 'fc_fa_agents';
     
     /**
-     * Agent properties
+     * Fillable attributes
      */
-    protected $id;
-    protected $name;
-    protected $description;
-    protected $type;
-    protected $model;
-    protected $status;
-    protected $system_prompt;
-    protected $web_search;
-    protected $file_processing;
-    protected $create_user;
-    protected $user_id;
-    protected $username;
-    protected $user_email;
-    protected $interactions;
-    protected $settings;
-    protected $created_at;
-    protected $updated_at;
+    protected $fillable = [
+        'name', 'description', 'type', 'model', 'status',
+        'system_prompt', 'web_search', 'file_processing',
+        'create_user', 'user_id', 'username', 'user_email',
+        'interactions', 'settings', 'created_at', 'updated_at'
+    ];
     
     /**
-     * Constructor
+     * Casts
      */
-    public function __construct($data = []) {
-        foreach ($data as $key => $value) {
-            if (property_exists($this, $key)) {
-                $this->$key = $value;
-            }
-        }
-    }
-    
-    /**
-     * Get table name with WordPress prefix
-     */
-    protected static function getTableName() {
-        global $wpdb;
-        return $wpdb->prefix . static::$table;
-    }
-    
-    /**
-     * Find agent by ID
-     */
-    public static function find($id) {
-        global $wpdb;
-        
-        $table_name = static::getTableName();
-        
-        $result = $wpdb->get_row(
-            $wpdb->prepare("SELECT * FROM {$table_name} WHERE id = %d", $id),
-            ARRAY_A
-        );
-        
-        return $result ? new static($result) : null;
-    }
+    protected $casts = [
+        'settings' => 'array',
+        'web_search' => 'boolean',
+        'file_processing' => 'boolean',
+        'create_user' => 'boolean',
+        'interactions' => 'integer',
+        'user_id' => 'integer'
+    ];
     
     /**
      * Find agent by name
@@ -92,33 +58,25 @@ class Agent {
     }
     
     /**
-     * Get all agents
+     * Get active agents
      */
-    public static function all($status = null) {
+    public static function active() {
+        return static::all(); // Filter is applied in all() if needed, but base all() gets everything. 
+        // Wait, original active() called all('active'). 
+        // BaseModel::all() doesn't take arguments.
+        // We should implement active() using get_results or similar, or just use paginate logic?
+        // Original all($status) was: SELECT * FROM table WHERE status = $status
+        
+        // Let's reimplement active() properly using the DB directly or a new method in BaseModel if we wanted generic "where".
+        // But for now, let's just do it here.
+        
         global $wpdb;
-        
         $table_name = static::getTableName();
-        
-        $sql = "SELECT * FROM {$table_name}";
-        
-        if ($status) {
-            $sql .= $wpdb->prepare(" WHERE status = %s", $status);
-        }
-        
-        $sql .= " ORDER BY created_at DESC";
-        
-        $results = $wpdb->get_results($sql, ARRAY_A);
+        $results = $wpdb->get_results("SELECT * FROM {$table_name} WHERE status = 'active' ORDER BY created_at DESC", ARRAY_A);
         
         return array_map(function($result) {
             return new static($result);
         }, $results);
-    }
-    
-    /**
-     * Get active agents
-     */
-    public static function active() {
-        return static::all('active');
     }
     
     /**
@@ -143,98 +101,22 @@ class Agent {
      * Create a new agent
      */
     public static function create($data) {
-        global $wpdb;
-        
-        $table_name = static::getTableName();
-        
-        // Prepare data for insertion
-        $insert_data = [
-            'name' => $data['name'],
-            'description' => $data['description'] ?? '',
-            'type' => $data['type'],
-            'model' => $data['model'],
-            'status' => $data['status'] ?? 'active',
-            'system_prompt' => $data['system_prompt'],
-            'web_search' => $data['web_search'] ?? 0,
-            'file_processing' => $data['file_processing'] ?? 0,
-            'create_user' => $data['create_user'] ?? 0,
-            'user_id' => $data['user_id'] ?? null,
-            'username' => $data['username'] ?? '',
-            'user_email' => $data['user_email'] ?? '',
+        // Set defaults
+        $defaults = [
+            'description' => '',
+            'status' => 'active',
+            'web_search' => 0,
+            'file_processing' => 0,
+            'create_user' => 0,
+            'user_id' => null,
+            'username' => '',
+            'user_email' => '',
             'interactions' => 0,
-            'settings' => isset($data['settings']) ? json_encode($data['settings']) : null,
         ];
         
-        $result = $wpdb->insert($table_name, $insert_data);
+        $data = array_merge($defaults, $data);
         
-        if ($result === false) {
-            return false;
-        }
-        
-        return static::find($wpdb->insert_id);
-    }
-    
-    /**
-     * Update the agent
-     */
-    public function update($data) {
-        global $wpdb;
-        
-        if (!$this->id) {
-            return false;
-        }
-        
-        $table_name = static::getTableName();
-        
-        // Prepare data for update
-        $update_data = [];
-        $allowed_fields = [
-            'name', 'description', 'type', 'model', 'status',
-            'system_prompt', 'web_search', 'file_processing',
-            'create_user', 'user_id', 'username', 'user_email',
-            'interactions', 'settings'
-        ];
-        
-        foreach ($data as $key => $value) {
-            if (in_array($key, $allowed_fields)) {
-                if ($key === 'settings' && is_array($value)) {
-                    $update_data[$key] = json_encode($value);
-                } else {
-                    $update_data[$key] = $value;
-                }
-            }
-        }
-        
-        if (empty($update_data)) {
-            return false;
-        }
-        
-        $result = $wpdb->update($table_name, $update_data, ['id' => $this->id]);
-        
-        if ($result !== false) {
-            // Update object properties
-            foreach ($update_data as $key => $value) {
-                $this->$key = $value;
-            }
-            return true;
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Delete the agent
-     */
-    public function delete() {
-        global $wpdb;
-        
-        if (!$this->id) {
-            return false;
-        }
-        
-        $table_name = static::getTableName();
-        
-        return $wpdb->delete($table_name, ['id' => $this->id]) !== false;
+        return parent::create($data);
     }
     
     /**
@@ -243,7 +125,7 @@ class Agent {
     public function incrementInteractions() {
         global $wpdb;
         
-        if (!$this->id) {
+        if (!isset($this->attributes['id'])) {
             return false;
         }
         
@@ -286,53 +168,5 @@ class Agent {
             'total_interactions' => (int) ($stats['total_interactions'] ?? 0),
             'avg_interactions' => round((float) ($stats['avg_interactions'] ?? 0), 2),
         ];
-    }
-    
-    /**
-     * Convert to array
-     */
-    public function toArray() {
-        $data = [];
-        $properties = [
-            'id', 'name', 'description', 'type', 'model', 'status',
-            'system_prompt', 'web_search', 'file_processing', 'create_user',
-            'user_id', 'username', 'user_email', 'interactions', 'settings',
-            'created_at', 'updated_at'
-        ];
-        
-        foreach ($properties as $property) {
-            if (isset($this->$property)) {
-                if ($property === 'settings' && is_string($this->$property)) {
-                    $data[$property] = json_decode($this->$property, true);
-                } else {
-                    $data[$property] = $this->$property;
-                }
-            }
-        }
-        
-        return $data;
-    }
-    
-    /**
-     * Magic getter
-     */
-    public function __get($property) {
-        if (property_exists($this, $property)) {
-            if ($property === 'settings' && is_string($this->$property)) {
-                return json_decode($this->$property, true);
-            }
-            return $this->$property;
-        }
-        
-        return null;
-    }
-    
-    /**
-     * Magic setter
-     */
-    public function __set($property, $value) {
-        if (property_exists($this, $property)) {
-            $this->$property = $value;
-        }
     }
 }

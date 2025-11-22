@@ -47,5 +47,24 @@ export const api = {
             headers
         });
         return handleResponse(response);
+    },
+    contentInstructions: {
+        getAll: (params = {}) => {
+            const queryString = new URLSearchParams(params).toString();
+            return api.get(`content-instructions?${queryString}`);
+        },
+        get: (id) => api.get(`content-instructions/${id}`),
+        create: (data) => api.post('content-instructions', data),
+        update: (id, data) => api.put(`content-instructions/${id}`, data),
+        delete: (id) => api.delete(`content-instructions/${id}`),
+        retry: (id) => api.post(`${resource}/retry`, { id })
+    },
+
+    posts: {
+        getAll: (params = {}) => {
+            const queryString = new URLSearchParams(params).toString();
+            return api.get(`fa_fc_posts?${queryString}`);
+        },
+        delete: (id) => api.delete(`fa_fc_posts/${id}`)
     }
 };
