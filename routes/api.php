@@ -186,3 +186,7 @@ $router->group(['prefix' => 'fa_fc_posts', 'middleware' => ['auth', 'admin']], f
     $router->resource('/', 'PostController'); // This will handle /posts, /posts/{id} etc.
     $router->post('/{id}/retry', 'PostController@retry')->name('posts.retry');
 });
+
+$router->group(['prefix' => 'fcom-spaces', 'middleware' => ['auth', 'admin']], function($router) {
+    $router->get('/', 'ContentInstructionController@fcom_spaces')->name('fcom-spaces.index');
+});

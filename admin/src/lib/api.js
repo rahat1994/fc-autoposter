@@ -60,11 +60,24 @@ export const api = {
         retry: (id) => api.post(`${resource}/retry`, { id })
     },
 
+    agents: {
+        getAll: (params = {}) => {
+            const queryString = new URLSearchParams(params).toString();
+            return api.get(`agents?${queryString}`);
+        }
+    },
+
     posts: {
         getAll: (params = {}) => {
             const queryString = new URLSearchParams(params).toString();
             return api.get(`fa_fc_posts?${queryString}`);
         },
         delete: (id) => api.delete(`fa_fc_posts/${id}`)
+    },
+
+    fcomSpaces:{
+        getAll: () => api.get(`fcom-spaces`)
     }
+
+
 };

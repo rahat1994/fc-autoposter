@@ -67,6 +67,19 @@ class ContentInstructionController {
             return Response::error('Failed to retrieve instruction', $e->getMessage(), 500);
         }
     }
+
+    public function fcom_spaces(Request $request){
+        try {
+            global $wpdb;
+
+            $fcom_spaces = $wpdb->get_results("SELECT id,title FROM {$wpdb->prefix}fcom_spaces");
+
+            return Response::success('FCom Spaces retrieved successfully', $fcom_spaces);   
+        } catch (\Exception $e) {
+            error_log('FC Autoposter ContentInstruction Controller Error: ' . $e->getMessage());
+            return Response::error('Failed to retrieve instruction', $e->getMessage(), 500);
+        }
+    }
     
     /**
      * Create a new instruction

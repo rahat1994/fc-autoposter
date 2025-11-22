@@ -110,6 +110,38 @@
               rows="5"
             />
           </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <Label for="agent">Agent</Label>
+              <Select v-model="formData.agent_id">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select an agent" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem v-for="agent in agents" :key="agent.id" :value="String(agent.id)">
+                    {{ agent.name }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div class="space-y-2">
+              <Label for="space">Space</Label>
+              <Select v-model="formData.fcom_space_id">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a space" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem v-for="space in fcomSpaces" :key="space.id" :value="String(space.id)">
+                    {{ space.title }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           
           <div class="grid grid-cols-2 gap-4">
             <div class="space-y-2">
@@ -194,10 +226,14 @@ const isEditing = ref(false)
 const currentId = ref(null)
 const currentPage = ref(1)
 const totalPages = ref(1)
+const agents = ref([])
+const fcomSpaces = ref([])
 
 // Form Data
 const formData = reactive({
   instruction: '',
+  agent_id: '',
+  fcom_space_id: '',
   metadata: {
     tone: '',
     length: ''
@@ -224,6 +260,28 @@ const fetchInstructions = async (page = 1) => {
   }
 }
 
+const fetchAgents = async () => {
+  try {
+    const response = await api.agents.getAll({ per_page: 100, status: 'active' })
+    if (response.success) {
+      agents.value = response.data.data
+    }
+  } catch (err) {
+    console.error('Failed to fetch agents:', err)
+  }
+}
+
+const fetchFcomSpaces = async () => {
+  try {
+    const response = await api.fcomSpaces.getAll({ per_page: 100 })
+    if (response.success) {
+      fcomSpaces.value = response.data
+    }
+  } catch (err) {
+    console.error('Failed to fetch fcom spaces:', err)
+  }
+}
+
 const changePage = (page) => {
   if (page >= 1 && page <= totalPages.value) {
     fetchInstructions(page)
@@ -234,6 +292,8 @@ const openCreateModal = () => {
   isEditing.value = false
   currentId.value = null
   formData.instruction = ''
+  formData.agent_id = 'none'
+  formData.fcom_space_id = 'none'
   formData.metadata = { tone: '', length: '' }
   showModal.value = true
 }
@@ -242,6 +302,8 @@ const editInstruction = (instruction) => {
   isEditing.value = true
   currentId.value = instruction.id
   formData.instruction = instruction.instruction
+  formData.agent_id = instruction.agent_id ? String(instruction.agent_id) : 'none'
+  formData.fcom_space_id = instruction.fcom_space_id ? String(instruction.fcom_space_id) : 'none'
   formData.metadata = instruction.metadata || { tone: '', length: '' }
   showModal.value = true
 }
@@ -254,11 +316,20 @@ const saveInstruction = async () => {
 
   saving.value = true
   try {
+    // Prepare data for API
+    const dataToSave = { ...formData }
+    if (dataToSave.agent_id === 'none') {
+      dataToSave.agent_id = ''
+    }
+    if (dataToSave.fcom_space_id === 'none') {
+      dataToSave.fcom_space_id = ''
+    }
+
     let response
     if (isEditing.value) {
-      response = await api.contentInstructions.update(currentId.value, formData)
+      response = await api.contentInstructions.update(currentId.value, dataToSave)
     } else {
-      response = await api.contentInstructions.create(formData)
+      response = await api.contentInstructions.create(dataToSave)
     }
 
     if (response.success) {
@@ -319,5 +390,7 @@ const formatDate = (dateString) => {
 // Lifecycle
 onMounted(() => {
   fetchInstructions()
+  fetchAgents()
+  fetchFcomSpaces()
 })
 </script>

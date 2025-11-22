@@ -25,7 +25,7 @@ class ContentInstruction extends BaseModel {
     protected $fillable = [
         'instruction', 'metadata', 'target_post_id', 'target_post_type',
         'status', 'attempts', 'last_attempt_at', 'ai_result', 'ai_model',
-        'error_message', 'created_at', 'updated_at'
+        'error_message', 'created_at', 'updated_at', 'fcom_space_id', 'agent_id'
     ];
     
     /**
