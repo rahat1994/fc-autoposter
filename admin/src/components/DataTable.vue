@@ -8,7 +8,7 @@
       />
     </div>
     
-    <div class="rounded-md border">
+    <div class="rounded-md border relative">
       <Table>
         <TableHeader>
           <TableRow v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
@@ -42,7 +42,16 @@
           </TableRow>
         </TableHeader>
         <TableBody>
-          <template v-if="table.getRowModel().rows?.length">
+          <template v-if="loading && !table.getRowModel().rows?.length">
+            <TableRow>
+              <TableCell :colSpan="columns.length" class="h-24 text-center">
+                <div class="flex justify-center items-center py-8">
+                  <Icon name="loader2" class="h-6 w-6 animate-spin text-primary" />
+                </div>
+              </TableCell>
+            </TableRow>
+          </template>
+          <template v-else-if="table.getRowModel().rows?.length">
             <TableRow
               v-for="row in table.getRowModel().rows"
               :key="row.id"
@@ -69,6 +78,10 @@
           </template>
         </TableBody>
       </Table>
+      
+      <div v-if="loading && table.getRowModel().rows?.length" class="absolute inset-0 bg-background/50 flex items-center justify-center z-10">
+         <Icon name="loader2" class="h-8 w-8 animate-spin text-primary" />
+      </div>
     </div>
     
     <div class="flex items-center justify-between space-x-2 py-4">
@@ -117,6 +130,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  Icon,
 } from '@/components/ui'
 
 const props = defineProps({
@@ -132,10 +146,36 @@ const props = defineProps({
     type: String,
     default: 'Search...',
   },
+  loading: {
+    type: Boolean,
+    default: false,
+  },
+  manualPagination: {
+    type: Boolean,
+    default: false,
+  },
+  total: {
+    type: Number,
+    default: 0,
+  },
+  pageIndex: {
+    type: Number,
+    default: 0,
+  },
+  pageSize: {
+    type: Number,
+    default: 10,
+  },
 })
+
+const emit = defineEmits(['page-change'])
 
 const globalFilter = ref('')
 const sorting = ref([])
+const pagination = ref({
+  pageIndex: 0,
+  pageSize: 10,
+})
 
 const table = useVueTable({
   get data() {
@@ -155,6 +195,11 @@ const table = useVueTable({
     get globalFilter() {
       return globalFilter.value
     },
+    get pagination() {
+      return props.manualPagination
+        ? { pageIndex: props.pageIndex, pageSize: props.pageSize }
+        : pagination.value
+    },
   },
   onSortingChange: updaterOrValue => {
     sorting.value = typeof updaterOrValue === 'function' ? updaterOrValue(sorting.value) : updaterOrValue
@@ -162,11 +207,25 @@ const table = useVueTable({
   onGlobalFilterChange: updaterOrValue => {
     globalFilter.value = typeof updaterOrValue === 'function' ? updaterOrValue(globalFilter.value) : updaterOrValue
   },
+  onPaginationChange: updaterOrValue => {
+    if (props.manualPagination) {
+      const next = typeof updaterOrValue === 'function'
+        ? updaterOrValue({ pageIndex: props.pageIndex, pageSize: props.pageSize })
+        : updaterOrValue
+      emit('page-change', next.pageIndex)
+    } else {
+      pagination.value = typeof updaterOrValue === 'function' ? updaterOrValue(pagination.value) : updaterOrValue
+    }
+  },
+  manualPagination: props.manualPagination,
+  get pageCount() {
+    return props.manualPagination ? Math.ceil(props.total / props.pageSize) : undefined
+  },
 })
 
 const getResultsText = () => {
   const { pageIndex, pageSize } = table.getState().pagination
-  const totalRows = table.getFilteredRowModel().rows.length
+  const totalRows = props.manualPagination ? props.total : table.getFilteredRowModel().rows.length
   const startRow = pageIndex * pageSize + 1
   const endRow = Math.min((pageIndex + 1) * pageSize, totalRows)
   

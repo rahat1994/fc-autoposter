@@ -8,6 +8,10 @@ A WordPress plugin with Vue 3 and Vite admin panel.
 - Vue 3 for reactive UI components
 - Vite for fast development and optimized builds
 - Hot Module Replacement (HMR) in development mode
+- **Laravel-style PHP routing system** for building REST APIs
+- MVC architecture with Controllers and Middleware
+- Built-in authentication and authorization
+- Input validation helpers
 
 ## Installation
 
@@ -17,18 +21,24 @@ A WordPress plugin with Vue 3 and Vite admin panel.
    git clone https://github.com/rahat1994/fc-autoposter.git
    ```
 
-2. Install dependencies:
+2. Install PHP dependencies with Composer:
    ```bash
-   cd fc-autoposter/admin
+   cd fc-autoposter
+   composer install --no-dev
+   ```
+
+3. Install Node.js dependencies:
+   ```bash
+   cd admin
    npm install
    ```
 
-3. Build the admin panel:
+4. Build the admin panel:
    ```bash
    npm run build
    ```
 
-4. Activate the plugin in WordPress admin panel (Plugins > Installed Plugins > FC Autoposter > Activate)
+5. Activate the plugin in WordPress admin panel (Plugins > Installed Plugins > FC Autoposter > Activate)
 
 ## Development
 
@@ -71,6 +81,8 @@ This will create optimized files in the `admin/dist/` directory.
 ```
 fc-autoposter/
 ├── fc-autoposter.php       # Main plugin file
+├── composer.json           # PHP dependency management
+├── vendor/                 # Composer dependencies (auto-generated)
 ├── admin/                  # Admin panel Vue app
 │   ├── src/
 │   │   ├── main.js        # Vue app entry point
@@ -78,12 +90,36 @@ fc-autoposter/
 │   ├── dist/              # Production build output (generated)
 │   ├── package.json       # Node dependencies
 │   └── vite.config.js     # Vite configuration
-└── README.md
+├── app/                    # PHP backend classes (renamed from includes/)
+│   ├── Routing/           # Routing system
+│   ├── Controllers/       # API controllers
+│   └── Middleware/        # Request middleware
+├── routes/
+│   └── api.php            # API route definitions
+├── README.md
+└── ROUTING.md             # Routing system documentation
 ```
 
 ## Usage
 
 After activating the plugin, you'll find "FC Autoposter" in the WordPress admin menu. Click it to access the admin panel powered by Vue 3.
+
+### API Development
+
+The plugin includes a Laravel-style routing system for building REST APIs. See [ROUTING.md](ROUTING.md) for complete documentation.
+
+Quick example:
+
+```php
+// In routes/api.php
+$router->get('/hello', function($request) {
+    return Response::success('Hello from API!');
+});
+
+// Access at: http://your-site.com/wp-json/fc-autoposter/v1/hello
+```
+
+For more details, see the [complete routing documentation](ROUTING.md).
 
 ## Requirements
 
