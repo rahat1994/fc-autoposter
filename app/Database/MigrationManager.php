@@ -40,7 +40,8 @@ class MigrationManager {
         $migration_classes = [
             'FCAutoposter\\Database\\Migrations\\CreateFcFaAgentsTable',
             'FCAutoposter\\Database\\Migrations\\CreateFcFaContentInstructionsTable',
-            'FCAutoposter\\Database\\Migrations\\CreateFcFaPostsTable'
+            'FCAutoposter\\Database\\Migrations\\CreateFcFaPostsTable',
+            'FCAutoposter\\Database\\Migrations\\AddAgentIdToContentInstructionsTable',
         ];
         
         foreach ($migration_classes as $class_name) {

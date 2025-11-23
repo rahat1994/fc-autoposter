@@ -64,6 +64,9 @@ function fc_autoposter_activate() {
                 if ($result['status'] === 'success') {
                     $success_count++;
                     error_log("FC Autoposter Activation: Migration completed - {$migration_name}");
+                } elseif ($result['status'] === 'skipped') {
+                    // Skipped migrations are not failures
+                    error_log("FC Autoposter Activation: Migration skipped (already applied) - {$migration_name}");
                 } else {
                     $failed_count++;
                     error_log("FC Autoposter Activation: Migration failed - {$migration_name}: " . ($result['error'] ?? $result['message']));
