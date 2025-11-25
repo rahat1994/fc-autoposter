@@ -86,9 +86,9 @@ class GoogleStudioProvider extends BaseAIProvider {
             ];
         }
         
-        // Add API key as query parameter
+        // Add API key as query parameter (URL encoded for safety)
         $separator = strpos($endpoint, '?') !== false ? '&' : '?';
-        $url = $this->getBaseUrl() . $endpoint . $separator . 'key=' . $this->apiKey;
+        $url = $this->getBaseUrl() . $endpoint . $separator . 'key=' . rawurlencode($this->apiKey);
         
         $headers = array_merge($this->getDefaultHeaders(), $headers);
         
@@ -100,7 +100,15 @@ class GoogleStudioProvider extends BaseAIProvider {
         ];
         
         if (!empty($data) && in_array($method, ['POST', 'PUT', 'PATCH'])) {
-            $args['body'] = wp_json_encode($data);
+            $encoded = wp_json_encode($data);
+            if ($encoded === false) {
+                return [
+                    'success' => false,
+                    'error' => 'Failed to encode request data as JSON',
+                    'error_code' => 'json_encode_error'
+                ];
+            }
+            $args['body'] = $encoded;
         }
         
         // Use WordPress HTTP API
@@ -130,31 +138,47 @@ class GoogleStudioProvider extends BaseAIProvider {
             'contents' => $contents,
         ];
         
-        // Add generation config
+        // Add generation config with validation
         $generationConfig = [];
         
+        // Google temperature range: 0.0 to 1.0
         if (isset($options['temperature'])) {
-            $generationConfig['temperature'] = (float) $options['temperature'];
+            $validated = $this->validateNumericOption($options['temperature'], 0.0, 1.0);
+            if ($validated !== null) {
+                $generationConfig['temperature'] = $validated;
+            }
         }
         
+        // maxOutputTokens must be positive integer
         if (isset($options['max_tokens'])) {
-            $generationConfig['maxOutputTokens'] = (int) $options['max_tokens'];
+            $validated = $this->validatePositiveIntOption($options['max_tokens']);
+            if ($validated !== null) {
+                $generationConfig['maxOutputTokens'] = $validated;
+            }
         }
         
+        // top_p range: 0.0 to 1.0
         if (isset($options['top_p'])) {
-            $generationConfig['topP'] = (float) $options['top_p'];
+            $validated = $this->validateNumericOption($options['top_p'], 0.0, 1.0);
+            if ($validated !== null) {
+                $generationConfig['topP'] = $validated;
+            }
         }
         
+        // top_k must be positive integer
         if (isset($options['top_k'])) {
-            $generationConfig['topK'] = (int) $options['top_k'];
+            $validated = $this->validatePositiveIntOption($options['top_k']);
+            if ($validated !== null) {
+                $generationConfig['topK'] = $validated;
+            }
         }
         
         if (!empty($generationConfig)) {
             $data['generationConfig'] = $generationConfig;
         }
         
-        // Add safety settings if provided
-        if (!empty($options['safety_settings'])) {
+        // Add safety settings if provided (validated as array)
+        if (!empty($options['safety_settings']) && is_array($options['safety_settings'])) {
             $data['safetySettings'] = $options['safety_settings'];
         }
         
@@ -339,12 +363,17 @@ class GoogleStudioProvider extends BaseAIProvider {
             return [];
         }
         
-        // Check if it's already just IDs
-        if (is_string($models[0])) {
+        // Check if it's already just IDs (array of strings)
+        if (isset($models[0]) && is_string($models[0])) {
             return $models;
         }
         
-        return array_column($models, 'id');
+        // Check if it's an array of model objects with 'id' key
+        if (isset($models[0]) && is_array($models[0]) && isset($models[0]['id'])) {
+            return array_column($models, 'id');
+        }
+        
+        return [];
     }
     
     /**

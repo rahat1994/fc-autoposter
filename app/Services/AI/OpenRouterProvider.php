@@ -110,34 +110,67 @@ class OpenRouterProvider extends BaseAIProvider {
             'messages' => $messages,
         ];
         
-        // Add optional parameters
+        // Add optional parameters with validation
+        // Temperature range: 0.0 to 2.0
         if (isset($options['temperature'])) {
-            $data['temperature'] = (float) $options['temperature'];
+            $validated = $this->validateNumericOption($options['temperature'], 0.0, 2.0);
+            if ($validated !== null) {
+                $data['temperature'] = $validated;
+            }
         }
         
+        // max_tokens must be positive integer
         if (isset($options['max_tokens'])) {
-            $data['max_tokens'] = (int) $options['max_tokens'];
+            $validated = $this->validatePositiveIntOption($options['max_tokens']);
+            if ($validated !== null) {
+                $data['max_tokens'] = $validated;
+            }
         }
         
+        // top_p range: 0.0 to 1.0
         if (isset($options['top_p'])) {
-            $data['top_p'] = (float) $options['top_p'];
+            $validated = $this->validateNumericOption($options['top_p'], 0.0, 1.0);
+            if ($validated !== null) {
+                $data['top_p'] = $validated;
+            }
         }
         
+        // frequency_penalty range: -2.0 to 2.0
         if (isset($options['frequency_penalty'])) {
-            $data['frequency_penalty'] = (float) $options['frequency_penalty'];
+            $validated = $this->validateNumericOption($options['frequency_penalty'], -2.0, 2.0);
+            if ($validated !== null) {
+                $data['frequency_penalty'] = $validated;
+            }
         }
         
+        // presence_penalty range: -2.0 to 2.0
         if (isset($options['presence_penalty'])) {
-            $data['presence_penalty'] = (float) $options['presence_penalty'];
+            $validated = $this->validateNumericOption($options['presence_penalty'], -2.0, 2.0);
+            if ($validated !== null) {
+                $data['presence_penalty'] = $validated;
+            }
         }
         
-        // OpenRouter specific options
-        if (isset($options['transforms'])) {
-            $data['transforms'] = $options['transforms'];
+        // OpenRouter specific options with validation
+        // See: https://openrouter.ai/docs/transforms
+        if (isset($options['transforms']) && is_array($options['transforms'])) {
+            // 'middle-out': Compression technique that prioritizes context relevance
+            $allowedTransforms = ['middle-out'];
+            $data['transforms'] = array_values(array_filter(
+                $options['transforms'],
+                function ($transform) use ($allowedTransforms) {
+                    return is_string($transform) && in_array($transform, $allowedTransforms, true);
+                }
+            ));
         }
         
-        if (isset($options['route'])) {
-            $data['route'] = $options['route'];
+        // See: https://openrouter.ai/docs/features/routing
+        if (isset($options['route']) && is_string($options['route'])) {
+            // 'fallback': Enables automatic fallback to alternative providers on error
+            $allowedRoutes = ['fallback'];
+            if (in_array($options['route'], $allowedRoutes, true)) {
+                $data['route'] = $options['route'];
+            }
         }
         
         $response = $this->makeRequest('/chat/completions', 'POST', $data);
@@ -224,12 +257,17 @@ class OpenRouterProvider extends BaseAIProvider {
             return [];
         }
         
-        // Check if it's already just IDs
-        if (is_string($models[0])) {
+        // Check if it's already just IDs (array of strings)
+        if (isset($models[0]) && is_string($models[0])) {
             return $models;
         }
         
-        return array_column($models, 'id');
+        // Check if it's an array of model objects with 'id' key
+        if (isset($models[0]) && is_array($models[0]) && isset($models[0]['id'])) {
+            return array_column($models, 'id');
+        }
+        
+        return [];
     }
     
     /**

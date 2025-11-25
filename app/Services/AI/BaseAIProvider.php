@@ -101,7 +101,15 @@ abstract class BaseAIProvider implements AIProviderInterface {
         ];
         
         if (!empty($data) && in_array($method, ['POST', 'PUT', 'PATCH'])) {
-            $args['body'] = wp_json_encode($data);
+            $encoded = wp_json_encode($data);
+            if ($encoded === false) {
+                return [
+                    'success' => false,
+                    'error' => 'Failed to encode request data as JSON',
+                    'error_code' => 'json_encode_error'
+                ];
+            }
+            $args['body'] = $encoded;
         }
         
         // Use WordPress HTTP API
@@ -133,6 +141,12 @@ abstract class BaseAIProvider implements AIProviderInterface {
         $status_code = wp_remote_retrieve_response_code($response);
         $body = wp_remote_retrieve_body($response);
         $decoded = json_decode($body, true);
+        
+        // Check for JSON decode errors
+        if ($decoded === null && json_last_error() !== JSON_ERROR_NONE && !empty($body)) {
+            error_log('FC Autoposter AI Provider JSON Error: ' . json_last_error_msg());
+            // Continue with null $decoded - extractErrorMessage will handle the raw body
+        }
         
         if ($status_code >= 200 && $status_code < 300) {
             return [
@@ -215,5 +229,51 @@ abstract class BaseAIProvider implements AIProviderInterface {
             'error' => $message,
             'error_code' => $code
         ];
+    }
+    
+    /**
+     * Validate and clamp a numeric value within a range
+     *
+     * @param mixed $value The value to validate
+     * @param float $min Minimum allowed value
+     * @param float $max Maximum allowed value
+     * @param float|null $default Default value if invalid
+     * @return float|null The validated value or null/default
+     */
+    protected function validateNumericOption($value, float $min, float $max, ?float $default = null): ?float {
+        if (!is_numeric($value)) {
+            return $default;
+        }
+        
+        $floatValue = (float) $value;
+        
+        // Clamp value to valid range
+        return max($min, min($max, $floatValue));
+    }
+    
+    /**
+     * Validate a positive integer option
+     *
+     * @param mixed $value The value to validate
+     * @param int|null $default Default value if invalid
+     * @param int|null $max Maximum allowed value
+     * @return int|null The validated value or null/default
+     */
+    protected function validatePositiveIntOption($value, ?int $default = null, ?int $max = null): ?int {
+        if (!is_numeric($value)) {
+            return $default;
+        }
+        
+        $intValue = (int) $value;
+        
+        if ($intValue < 1) {
+            return $default;
+        }
+        
+        if ($max !== null && $intValue > $max) {
+            return $max;
+        }
+        
+        return $intValue;
     }
 }

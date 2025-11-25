@@ -70,25 +70,45 @@ class OpenAIProvider extends BaseAIProvider {
             'messages' => $messages,
         ];
         
-        // Add optional parameters
+        // Add optional parameters with validation
+        // OpenAI temperature range: 0.0 to 2.0
         if (isset($options['temperature'])) {
-            $data['temperature'] = (float) $options['temperature'];
+            $validated = $this->validateNumericOption($options['temperature'], 0.0, 2.0);
+            if ($validated !== null) {
+                $data['temperature'] = $validated;
+            }
         }
         
+        // max_tokens must be positive integer
         if (isset($options['max_tokens'])) {
-            $data['max_tokens'] = (int) $options['max_tokens'];
+            $validated = $this->validatePositiveIntOption($options['max_tokens']);
+            if ($validated !== null) {
+                $data['max_tokens'] = $validated;
+            }
         }
         
+        // top_p range: 0.0 to 1.0
         if (isset($options['top_p'])) {
-            $data['top_p'] = (float) $options['top_p'];
+            $validated = $this->validateNumericOption($options['top_p'], 0.0, 1.0);
+            if ($validated !== null) {
+                $data['top_p'] = $validated;
+            }
         }
         
+        // frequency_penalty range: -2.0 to 2.0
         if (isset($options['frequency_penalty'])) {
-            $data['frequency_penalty'] = (float) $options['frequency_penalty'];
+            $validated = $this->validateNumericOption($options['frequency_penalty'], -2.0, 2.0);
+            if ($validated !== null) {
+                $data['frequency_penalty'] = $validated;
+            }
         }
         
+        // presence_penalty range: -2.0 to 2.0
         if (isset($options['presence_penalty'])) {
-            $data['presence_penalty'] = (float) $options['presence_penalty'];
+            $validated = $this->validateNumericOption($options['presence_penalty'], -2.0, 2.0);
+            if ($validated !== null) {
+                $data['presence_penalty'] = $validated;
+            }
         }
         
         $response = $this->makeRequest('/chat/completions', 'POST', $data);
@@ -147,10 +167,25 @@ class OpenAIProvider extends BaseAIProvider {
         }
         
         $models = [];
+        // Chat completion model patterns - covers current and future naming conventions
+        $chatModelPatterns = [
+            '/^gpt-/',       // GPT models
+            '/^o\d+/',       // o1, o2, etc. models
+            '/^chatgpt-/',   // ChatGPT models
+        ];
+        
         foreach ($response['data']['data'] ?? [] as $model) {
-            // Filter to only show GPT models
-            if (strpos($model['id'], 'gpt') === 0) {
-                $models[] = $model['id'];
+            $modelId = $model['id'] ?? '';
+            if (empty($modelId) || !is_string($modelId)) {
+                continue;
+            }
+            
+            // Check if model matches any chat model pattern
+            foreach ($chatModelPatterns as $pattern) {
+                if (preg_match($pattern, $modelId)) {
+                    $models[] = $modelId;
+                    break;
+                }
             }
         }
         
